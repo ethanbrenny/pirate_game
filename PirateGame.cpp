@@ -128,6 +128,7 @@ int main(int argc, char *argv[]) {
   string uv;//, uCoord[4475], vCoord[4475];
   string uCoord, vCoord,wCoord;
   string valuesX, valuesY, valuesZ;
+  float* modelData[4475*8];
   float verts[4475*3];
   int vertCount = 0;
   float uvMap[4475*2];
@@ -163,14 +164,25 @@ int main(int argc, char *argv[]) {
       }
 		}
 	}
-
+  int incVerty = 0;
+  int incNormy = 0;
+  int incMap = 0;
+  for (int i = 0;i < 4475*8;i+=8) {
+    modelData[i] = &verts[incVerty++];
+    modelData[i+1] = &verts[incVerty++];
+    modelData[i+2] = &verts[incVerty++];
+    modelData[i+3] = &vertNorm[incNormy++];
+    modelData[i+4] = &vertNorm[incNormy++];
+    modelData[i+5] = &vertNorm[incNormy++];
+    modelData[i+6] = &uvMap[incMap++];
+    modelData[i+7] = &uvMap[incMap++];
+  }
   //printShitMatey(verts, 4475*3);
   //printShitMatey(uvMap, 4475*2);
   //printShitMatey(vertNorm, 4475*3);
 
 	int numLines =0;
 	int numVerts =0;
-	float* modelData[4865];
 
   GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
   loadShader(vertexShader, vertexSource);
