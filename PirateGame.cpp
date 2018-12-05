@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
   string uv;//, uCoord[4475], vCoord[4475];
   string uCoord, vCoord,wCoord;
   string valuesX, valuesY, valuesZ;
-  float* modelData[4475*8];
+  float* modelData = new float[4475*8];
   float verts[4475*3];
   int vertCount = 0;
   float uvMap[4475*2];
@@ -168,21 +168,21 @@ int main(int argc, char *argv[]) {
   int incNormy = 0;
   int incMap = 0;
   for (int i = 0;i < 4475*8;i+=8) {
-    modelData[i] = &verts[incVerty++];
-    modelData[i+1] = &verts[incVerty++];
-    modelData[i+2] = &verts[incVerty++];
-    modelData[i+3] = &vertNorm[incNormy++];
-    modelData[i+4] = &vertNorm[incNormy++];
-    modelData[i+5] = &vertNorm[incNormy++];
-    modelData[i+6] = &uvMap[incMap++];
-    modelData[i+7] = &uvMap[incMap++];
+    modelData[i] = verts[incVerty++];
+    modelData[i+1] = verts[incVerty++];
+    modelData[i+2] = verts[incVerty++];
+    modelData[i+3] = vertNorm[incNormy++];
+    modelData[i+4] = vertNorm[incNormy++];
+    modelData[i+5] = vertNorm[incNormy++];
+    modelData[i+6] = uvMap[incMap++];
+    modelData[i+7] = uvMap[incMap++];
   }
   //printShitMatey(verts, 4475*3);
   //printShitMatey(uvMap, 4475*2);
   //printShitMatey(vertNorm, 4475*3);
 
-	int numLines =0;
-	int numVerts =0;
+	int numLines = 4475*8;
+	int numVerts =4475;
 
   GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
   loadShader(vertexShader, vertexSource);
@@ -236,18 +236,18 @@ int main(int argc, char *argv[]) {
 
     float time = SDL_GetTicks()/1000.f;
     glm::mat4 model;
-    model = glm::rotate(model,time * 3.14f/2,glm::vec3(0.0f, 1.0f, 1.0f));
-    model = glm::rotate(model,time * 3.14f/4,glm::vec3(1.0f, 0.0f, 0.0f));
+    //model = glm::rotate(model,time * 3.14f/2,glm::vec3(0.0f, 1.0f, 1.0f));
+    //model = glm::rotate(model,time * 3.14f/4,glm::vec3(1.0f, 0.0f, 0.0f));
     GLint uniModel = glGetUniformLocation(shaderProgram, "model");
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
     glm::mat4 view = glm::lookAt(
-      glm::vec3(3.0f, 0.0f, 0.0f),  //Cam Position
+      glm::vec3(6.0f, 0.0f, 1.0f),  //Cam Position
       glm::vec3(0.0f, 0.0f, 0.0f),  //Look at point
       glm::vec3(0.0f, 0.0f, 1.0f)); //Up
     GLint uniView = glGetUniformLocation(shaderProgram, "view");
     glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
-    glm::mat4 proj = glm::perspective(3.14f/4, aspect, 1.0f, 10.0f);
+    glm::mat4 proj = glm::perspective(3.14f/4, aspect, 0.01f, 100.0f);
                                       //FOV, aspect ratio, near, far
     GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
     glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
