@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
 	
 	int numVerts = 0;
 	 
-	for (int i =0; i < 1168*5 -5; i++){
+	for (int i =0; i < filelength; i++){
 		if (faces[i] == 'f'){
 			if (faceCount < 1168) {
 				if (faces[i+5] != 'f' && faces[i+4] != 'f'){
@@ -293,7 +293,7 @@ int main(int argc, char *argv[]) {
 
 
 	GLint normAttrib = glGetAttribLocation(shaderProgram, "inNormal");
-	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(5*sizeof(float)));
+	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(normAttrib);
 
 
@@ -323,8 +323,8 @@ int main(int argc, char *argv[]) {
 		glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
 		glm::mat4 view = glm::lookAt(
-		glm::vec3(6.0f, 0.0f, 1.0f),  //Cam Position
-		glm::vec3(0.0f, 0.0f, 0.0f),  //Look at point
+		glm::vec3(6.0f, 0.0f, 4.0f),  //Cam Position
+		glm::vec3(0.0f, 0.0f, 1.0f),  //Look at point
 		glm::vec3(0.0f, 0.0f, 1.0f)); //Up
 		GLint uniView = glGetUniformLocation(shaderProgram, "view");
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
