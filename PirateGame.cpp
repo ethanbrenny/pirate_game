@@ -135,9 +135,9 @@ int main(int argc, char *argv[]) {
 	int uvCount = 0;
 	float vertNorm[4475*3];
 	int normCount = 0;
-	int faceCount =0; 
+	int faceCount =0;
 	int filelength = 0;
-	
+
 	ifstream myfile ("models/low_poly_ship/ship_finished.obj");
 	//string::size_type size;
 	while(!myfile.eof()){
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
 				uvMap[uvCount+1] = strtof((valuesY).c_str(),0);
 				uvCount += 2;
 			}
-		} 
+		}
 		else if (v[0] == 'v' && v[1] == 'n'){
 			if (normCount < (4475*3)) {
 				//myfile >> v >> valuesX>> valuesY>> valuesZ;
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 				vertNorm[normCount+2] = strtof((valuesZ).c_str(),0);
 				normCount += 3;
 			}
-		} 
+		}
 		else if (v[0] == 'v'){
 			if (vertCount < (4475*3)) {
 				//myfile >> v >> valuesX>> valuesY>> valuesZ;
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
 	//start of changes I made
 	char faces[filelength + 5];
 	string fileinfo;
-	int faceindex =0; 
+	int faceindex =0;
 	ifstream newfile ("models/low_poly_ship/ship_finished.obj");
 	while(!newfile.eof()){
 		newfile >> fileinfo;
@@ -184,17 +184,17 @@ int main(int argc, char *argv[]) {
 	int incVerty = 0;
 	int incNormy = 0;
 	int incMap = 0;
-	
+
 	int numVerts = 0;
-	 
+
 	for (int i =0; i < filelength; i++){
 		if (faces[i] == 'f'){
 			if (faceCount < 1168) {
-				if (faces[i+5] != 'f' && faces[i+4] != 'f'){
-					continue; 
+				if (faces[i+5] != 'f' && faces[i+4] != 'f' && faces[i+4] != 's' && faces[i+5] != 's'){
+					continue;
 				}
 				//if f is followed by 3 verticies add them as normal
-				else if(faces[i+4] == 'f'){
+				else if(faces[i+4] == 'f' || faces[i+4] == 's'){
 					numVerts += 3;
 					for (int j =0; j < 3; j++){
 						modelData[modelIndex++] = verts[incVerty++];
@@ -208,9 +208,9 @@ int main(int argc, char *argv[]) {
 					}
 				}
 				//if f is followed by 4 vertices (a, b, c, d), add them as (a, b, c) & (b, c, d)
-				else if(faces[i+5] == 'f'){
+				else if(faces[i+5] == 'f' || faces[i+5] == 's'){
 					numVerts += 6;
-					for (int j =0; j < 3; j++){
+					for (int j =0; j < 3; j++){ //
 						modelData[modelIndex++] = verts[incVerty++];
 						modelData[modelIndex++] = verts[incVerty++];
 						modelData[modelIndex++] = verts[incVerty++];
@@ -220,10 +220,15 @@ int main(int argc, char *argv[]) {
 						modelData[modelIndex++] = uvMap[incMap++];
 						modelData[modelIndex++] = uvMap[incMap++];
 					}
-					incVerty -= 6; 
-					incNormy -= 6;
-					incMap -= 4; 
+					incVerty -= 3;
+					incNormy -= 3;
+					incMap -= 2;
 					for (int j =0; j < 3; j++){
+            if (j == 2) {
+              incVerty -= 12;
+    					incNormy -= 12;
+              incMap -= 8;
+            }
 						modelData[modelIndex++] = verts[incVerty++];
 						modelData[modelIndex++] = verts[incVerty++];
 						modelData[modelIndex++] = verts[incVerty++];
@@ -233,16 +238,18 @@ int main(int argc, char *argv[]) {
 						modelData[modelIndex++] = uvMap[incMap++];
 						modelData[modelIndex++] = uvMap[incMap++];
 					}
+          incVerty += 9;
+          incNormy += 9;
+          incMap += 6;
 				}
-				vertCount += 1;
 			}
-			faceCount++; 
+			faceCount++;
 		}
 	}
-	
+
 	int numLines = numVerts * 8 ;
-	//end of changes I made 
-	
+	//end of changes I made
+
 	/*
 	int incVerty = 0;
 	int incNormy = 0;
@@ -258,12 +265,12 @@ int main(int argc, char *argv[]) {
 		modelData[i+7] = uvMap[incMap++];
 	}
 	*/
-	
+
 	//printShitMatey(verts, 4475*3);
 	//printShitMatey(uvMap, 4475*2);
 	//printShitMatey(vertNorm, 4475*3);
 
-	
+
 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	loadShader(vertexShader, vertexSource);
