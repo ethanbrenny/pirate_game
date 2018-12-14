@@ -45,13 +45,13 @@ glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
 
-unsigned char* loadImage(int& img_w, int& img_h){
+unsigned char* loadImage(string tName, int& img_w, int& img_h){
 
    //Open the texture image file
    ifstream ppmFile;
-   ppmFile.open(textureName.c_str());
+   ppmFile.open(tName.c_str());
    if (!ppmFile){
-      printf("ERROR: Texture file '%s' not found.\n",textureName.c_str());
+      printf("ERROR: Texture file '%s' not found.\n",tName.c_str());
       exit(1);
    }
 
@@ -90,7 +90,139 @@ unsigned char* loadImage(int& img_w, int& img_h){
    return img_data;
 }
 
+float* makeObject(string fileName, int amtVerts, int totShapes) {
+  numVerts = 0;
+  numLines = 0;
+  string line;
+	string v;//, valuesX[4475], valuesY[4475], valuesZ[4475];
+	string uv;//, uCoord[4475], vCoord[4475];
+	string uCoord, vCoord,wCoord;
+	string valuesX, valuesY, valuesZ;
+	float verts[amtVerts*3];
+	float uvMap[amtVerts*2];
+    int vertCount = 0;
+    int lineCount = 0;
+	int uvCount = 0;
+	float vertNorm[amtVerts*3];
+	int normCount = 0;
+	int faceCount =0;
+	int filelength = 0;
+  float* newData = new float[amtVerts*8*2];
+
+	ifstream myfile (fileName);
+	//string::size_type size;
+	while(!myfile.eof()){
+		myfile >> v >> valuesX>> valuesY>> valuesZ;
+		filelength += 4;
+		if (v[0] == 'v' && v[1] == 't'){
+			if (uvCount < (amtVerts*2)) {
+				uvMap[uvCount] = strtof((valuesX).c_str(),0);
+				uvMap[uvCount+1] = strtof((valuesY).c_str(),0);
+				uvCount += 2;
+			}
+		}
+		else if (v[0] == 'v' && v[1] == 'n'){
+			if (normCount < (amtVerts*3)) {
+				//myfile >> v >> valuesX>> valuesY>> valuesZ;
+				vertNorm[normCount] = strtof((valuesX).c_str(),0);
+				vertNorm[normCount+1] = strtof((valuesY).c_str(),0);
+				vertNorm[normCount+2] = strtof((valuesZ).c_str(),0);
+				normCount += 3;
+			}
+		}
+		else if (v[0] == 'v'){
+			if (vertCount < (amtVerts*3)) {
+				//myfile >> v >> valuesX>> valuesY>> valuesZ;
+				//cout << valuesX[n] << "\t" << valuesY[n] << "\t" << valuesZ[n] << endl;
+				verts[vertCount] = strtof((valuesX).c_str(),0);
+				verts[vertCount+1] = strtof((valuesY).c_str(),0);
+				verts[vertCount+2] = strtof((valuesZ).c_str(),0);
+				vertCount += 3;
+			}
+		}
+	}
+
+	//start of changes I made
+	char faces[filelength + 5];
+	string fileinfo;
+	int faceindex =0;
+	ifstream newfile (fileName);
+	while(!newfile.eof()){
+		newfile >> fileinfo;
+		faces[faceindex++] = fileinfo[0];
+	}
+	int modelIndex =0 ;
+	int incVerty = 0;
+	int incNormy = 0;
+	int incMap = 0;
+
+
+	for (int i =0; i < filelength; i++){
+		if (faces[i] == 'f'){
+			if (faceCount < 1168) {
+				if (faces[i+5] != 'f' && faces[i+4] != 'f' && faces[i+4] != 's' && faces[i+5] != 's'){
+					continue;
+				}
+				//if f is followed by 3 verticies add them as normal
+				else if(faces[i+4] == 'f' || faces[i+4] == 's'){
+					numVerts += 3;
+					for (int j =0; j < 3; j++){
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = uvMap[incMap++];
+						newData[modelIndex++] = 1-uvMap[incMap++];
+					}
+				}
+				//if f is followed by 4 vertices (a, b, c, d), add them as (a, b, c) & (b, c, d)
+				else if(faces[i+5] == 'f' || faces[i+5] == 's'){
+					numVerts += 6;
+					for (int j =0; j < 3; j++){ //
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = uvMap[incMap++];
+						newData[modelIndex++] = 1-uvMap[incMap++];
+					}
+					incVerty -= 3;
+					incNormy -= 3;
+					incMap -= 2;
+					for (int j =0; j < 3; j++){
+            if (j == 2) {
+              incVerty -= 12;
+    					incNormy -= 12;
+              incMap -= 8;
+            }
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = verts[incVerty++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = vertNorm[incNormy++];
+						newData[modelIndex++] = uvMap[incMap++];
+						newData[modelIndex++] = 1-uvMap[incMap++];
+					}
+          incVerty += 9;
+          incNormy += 9;
+          incMap += 6;
+				}
+			}
+			faceCount++;
+		}
+	}
+  numLines = numVerts * 8;
+  return newData;
+}
+
 void makeShip() {
+  numVerts = 0;
+  numLines = 0;
   string line;
 	string v;//, valuesX[4475], valuesY[4475], valuesZ[4475];
 	string uv;//, uCoord[4475], vCoord[4475];
@@ -343,13 +475,13 @@ int main(int argc, char *argv[]) {
 	//load texture image
 	int wi, hi, nrChannels;
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-	unsigned char* imgData = loadImage(wi,hi);
+	unsigned char* imgData = loadImage("ship.ppm",wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	makeShip(); // This is surprising but this makes a ship
+	float* newObjData = makeObject("models/low_poly_ship/ship_finished.obj",4475,1168); // This is surprising but this makes a ship
 	cout << "ship made \n";
 	//errors in this area
 
@@ -362,7 +494,7 @@ int main(int argc, char *argv[]) {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float), modelData, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float), newObjData, GL_DYNAMIC_DRAW);
 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	loadShader(vertexShader, vertexSource);
@@ -414,18 +546,16 @@ int main(int argc, char *argv[]) {
 				fullscreen = !fullscreen;
 				SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
 			}
-			
-			glm::vec3 camForward = shipPos - camPos; 
-			camForward = glm::normalize(camForward); 
-			glm::vec3 camLeft = glm::cross(camForward,camUp); 
-			camLeft = glm::normalize(camLeft); 
-			glm::vec3 camBack = camPos - shipPos; 
-			camBack = glm::normalize(camBack); 
-			glm::vec3 camRight = glm::cross(camUp, camForward); 
-			camRight = glm::normalize(camRight); 
+
+			glm::vec3 camForward = shipPos - camPos;
+			camForward = glm::normalize(camForward);
+			glm::vec3 camLeft = glm::cross(camForward,camUp);
+			camLeft = glm::normalize(camLeft);
+			glm::vec3 camBack = camPos - shipPos;
+			camBack = glm::normalize(camBack);
+			glm::vec3 camRight = glm::cross(camUp, camForward);
+			camRight = glm::normalize(camRight);
 			glm::vec3 newPos;
-			
-			
 		}
 		// Clear the screen to default color
 		glClearColor(.2f, 0.4f, 0.8f, 1.0f);
@@ -442,7 +572,7 @@ int main(int argc, char *argv[]) {
 		camPos,  //Cam Position
 		shipPos,  //Look at point
 		camUp); //Up
-		
+
 		GLint uniView = glGetUniformLocation(shaderProgram, "view");
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 		glm::mat4 proj = glm::perspective(3.14f/4, aspect, 0.01f, 100.0f);
