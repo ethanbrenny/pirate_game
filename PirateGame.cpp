@@ -47,7 +47,7 @@ unsigned char* loadImage(int& img_w, int& img_h){
 
    //Check that this is an ASCII PPM (first line is P3)
    string PPM_style;
-   ppmFile >> PPM_style; //Read the first line of the header    
+   ppmFile >> PPM_style; //Read the first line of the header
    if (PPM_style != "P3") {
       printf("ERROR: PPM Type number is %s. Not an ASCII (P3) PPM file!\n",PPM_style.c_str());
       exit(1);
@@ -69,18 +69,27 @@ unsigned char* loadImage(int& img_w, int& img_h){
    //while(ppmFile>> ...){
    //    //Store the RGB pixel data from the file into an array
    //}
+   int red = 0, blue = 0, green = 0,alpha =0;
+   int i = 0;
+   while (ppmFile>>red>>green>>blue>>alpha) {
+     img_data[i++] = red;  //Red
+     img_data[i++] = green;  //Green
+     img_data[i++] = blue;  //Blue
+     img_data[i++] = alpha;  //Alpha
+   }
+
 
    //TODO: This loop puts in fake data, replace with the actual pixels read from the file
-   for (int i = 0; i < img_h; i++){
+   /*for (int i = 0; i < img_h; i++){
       float fi = i/(float)img_h;
       for (int j = 0; j < img_w; j++){
          float fj = j/(float)img_w;
-         img_data[i*img_w*4 + j*4] = 50;  //Red
-         img_data[i*img_w*4 + j*4 + 1] = fj*150;  //Green
-         img_data[i*img_w*4 + j*4 + 2] = fi*250;  //Blue
+         img_data[i*img_w*4 + j*4] = 0;  //Red
+         img_data[i*img_w*4 + j*4 + 1] = fj;  //Green
+         img_data[i*img_w*4 + j*4 + 2] = fi;  //Blue
          img_data[i*img_w*4 + j*4 + 3] = 255;  //Alpha
       }
-   }
+   }*/
 
    return img_data;
 }
@@ -322,46 +331,46 @@ int main(int argc, char *argv[]) {
 		printf("ERROR: Failed to initialize OpenGL context.\n");
 		return -1;
 	}
-	
-	//Allocate Texture 0 
-	cout << "textures loaded\n"; 
+
+	//Allocate Texture 0
+	cout << "textures loaded\n";
 	GLuint tex0;
 	glGenTextures(1, &tex0);
 	glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex0);
-    
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
+
 	//load texture image
 	int wi, hi, nrChannels;
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* imgData = loadImage(wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
-	
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	makeShip(); // This is surprising but this makes a ship
-	cout << "ship made \n"; 
+	cout << "ship made \n";
 	//errors in this area
-	
+
 	//Build a Vertex Array Object. This stores the VBO and attribute mappings in one object
 	GLuint vao;
 	glGenVertexArrays(1, &vao); //Create a VAO
 	glBindVertexArray(vao); //Bind the above created VAO to the current context
-	
+
 	//Allocate memory on the graphics card to store geometry (vertex buffer object)
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float), modelData, GL_DYNAMIC_DRAW);
-	
+
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	loadShader(vertexShader, vertexSource);
-	
+
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	loadShader(fragmentShader, fragmentSource);
 
@@ -372,25 +381,25 @@ int main(int argc, char *argv[]) {
 	glBindFragDataLocation(shaderProgram, 0, "outColor"); // set output
 	glLinkProgram(shaderProgram); //run the linker
 
-	cout << "color made \n"; 
+	cout << "color made \n";
 
 
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
 	//Attribute, vals/attrib., type, isNormalized, stride, offset
 	glEnableVertexAttribArray(posAttrib);
-	cout << "potition made \n"; 
-	
+	cout << "potition made \n";
+
 	GLint normAttrib = glGetAttribLocation(shaderProgram, "inNormal");
 	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(normAttrib);
-	cout << "normals made \n"; 
+	cout << "normals made \n";
 
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
     glEnableVertexAttribArray(texAttrib);
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
    	cout << "texture made \n";
-   	
+
    GLint colAttrib = glGetAttribLocation(shaderProgram, "inColor");
    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
    glEnableVertexAttribArray(colAttrib);
@@ -441,7 +450,7 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_SwapWindow(window); //Double buffering
 	}
-	
+
 	delete [] imgData;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
