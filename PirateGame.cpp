@@ -2,6 +2,18 @@ using namespace std;
 #include <string.h>
 #include <iostream>
 #include "glad/glad.h"  //Include order can matter here
+
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#define PNG_DEBUG 3
+#include <png.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb-master/stb_image.h"
+
 #if defined(__APPLE__) || defined(__linux__)
  #include <SDL2/SDL.h>
  #include <SDL2/SDL_opengl.h>
@@ -11,10 +23,23 @@ using namespace std;
 #endif
 #include <fstream>
 
+
 using std::ifstream;
 float* modelData = new float[4475*8*2];
 int numLines = 0;
 int numVerts = 0;
+GLuint texture;
+GLuint fb =1;
+
+int height, width;
+png_byte color_type; 
+png_byte bit_depth;
+png_structp png_ptr;
+png_infop info_ptr;
+int number_of_passes;
+png_bytep * row_pointers;
+
+
 void makeShip() {
   string line;
 	string v;//, valuesX[4475], valuesY[4475], valuesZ[4475];
@@ -140,10 +165,60 @@ void makeShip() {
 	}
   numLines = numVerts * 8 ;
 }
+
 void printShitMatey(float ex[],int length) {
   for (int i=0;i<length;i+=3) {
     cout<<" vals at ("<<i<<"): "<<ex[i]<<endl;
   }
+}
+
+void ship_texture_load(){ 
+	 char header[8];    // 8 is the maximum size that can be checked
+
+	/* open file and test for it being a png */
+	FILE *fp = fopen("./models/low_poly_ship/123.png", "rb");
+	fread(header, 1, 8, fp);
+	
+	/* initialize stuff */
+	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	
+	info_ptr = png_create_info_struct(png_ptr);
+	
+	png_init_io(png_ptr, fp);
+	png_set_sig_bytes(png_ptr, 8);
+
+	png_read_info(png_ptr, info_ptr);
+
+	width = png_get_image_width(png_ptr, info_ptr);
+	height = png_get_image_height(png_ptr, info_ptr);
+	color_type = png_get_color_type(png_ptr, info_ptr);
+	bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+	cout << "there \n"; 
+	
+	number_of_passes = png_set_interlace_handling(png_ptr);
+	cout << "here \n"; 
+	png_read_update_info(png_ptr, info_ptr);
+	
+
+	/* read file */
+	row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
+	cout << "is it the loop? \n"; 
+	for (int y=0; y<height; y++){
+		row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
+	}
+	cout << "Nope \n"; 
+	png_read_image(png_ptr, row_pointers);
+
+	fclose(fp);
+	
+	for (int y =0; y < height; y++){
+		png_byte * row = row_pointers[y];
+		for (int x =0; x < width; x++){
+			png_byte * ptr = &(row[x*4]);
+			cout << int (ptr[0]) << ", " << int(ptr[1]) << ", " << int(ptr[2]) << endl; 
+		}
+	}
+	
 }
 
 bool fullscreen = false;
@@ -247,9 +322,9 @@ int main(int argc, char *argv[]) {
 		printf("ERROR: Failed to initialize OpenGL context.\n");
 		return -1;
 	}
-
-  makeShip(); // This is surprising but this makes a ship
-
+	
+	makeShip(); // This is surprising but this makes a ship
+	cout << "ship made \n"; 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	loadShader(vertexShader, vertexSource);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -262,7 +337,7 @@ int main(int argc, char *argv[]) {
 	glBindFragDataLocation(shaderProgram, 0, "outColor"); // set output
 	glLinkProgram(shaderProgram); //run the linker
 
-
+	cout << "color made \n"; 
 	GLuint vao;
 	glGenVertexArrays(1, &vao); //Create a VAO
 	glBindVertexArray(vao); //Bind the above created VAO to the current context
@@ -275,12 +350,39 @@ int main(int argc, char *argv[]) {
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
 	//Attribute, vals/attrib., type, isNormalized, stride, offset
 	glEnableVertexAttribArray(posAttrib);
+	
+	cout << "potition made \n"; 
+	//load texture
+	ship_texture_load(); 
+	
+	cout << "textures loaded made \n"; 
+	GLuint tex;
+	int wi, hi, nrChannels;
+	unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+    stbi_image_free(imgData);
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	unsigned int texture; 
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
+	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+	glEnableVertexAttribArray(texAttrib);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
-
+	cout << "texture made \n"; 
 	GLint normAttrib = glGetAttribLocation(shaderProgram, "inNormal");
 	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(normAttrib);
-
+	cout << "normals made \n"; 
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -323,6 +425,7 @@ int main(int argc, char *argv[]) {
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
 		glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
+		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
 		SDL_GL_SwapWindow(window); //Double buffering
 	}
