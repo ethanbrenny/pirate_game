@@ -20,7 +20,6 @@ using namespace std;
 #endif
 #include <fstream>
 
-
 using std::ifstream;
 float* modelData = new float[4475*8*2];
 int numLines = 0;
@@ -30,6 +29,61 @@ GLuint fb =1;
 
 int height, width;
 
+string textureName = "goldy.ppm";
+
+bool fullscreen = false;
+int screen_width = 800;
+int screen_height = 600;
+
+unsigned char* loadImage(int& img_w, int& img_h){
+
+   //Open the texture image file
+   ifstream ppmFile;
+   ppmFile.open(textureName.c_str());
+   if (!ppmFile){
+      printf("ERROR: Texture file '%s' not found.\n",textureName.c_str());
+      exit(1);
+   }
+
+   //Check that this is an ASCII PPM (first line is P3)
+   string PPM_style;
+   ppmFile >> PPM_style; //Read the first line of the header    
+   if (PPM_style != "P3") {
+      printf("ERROR: PPM Type number is %s. Not an ASCII (P3) PPM file!\n",PPM_style.c_str());
+      exit(1);
+   }
+
+   //Read in the texture width and height
+   ppmFile >> img_w >> img_h;
+   unsigned char* img_data = new unsigned char[4*img_w*img_h];
+
+   //Check that the 3rd line is 255 (ie., this is an 8 bit/pixel PPM)
+   int maximum;
+   ppmFile >> maximum;
+   if (maximum != 255) {
+      printf("ERROR: Maximum size is (%d) not 255.\n",maximum);
+      exit(1);
+   }
+
+   //TODO:
+   //while(ppmFile>> ...){
+   //    //Store the RGB pixel data from the file into an array
+   //}
+
+   //TODO: This loop puts in fake data, replace with the actual pixels read from the file
+   for (int i = 0; i < img_h; i++){
+      float fi = i/(float)img_h;
+      for (int j = 0; j < img_w; j++){
+         float fj = j/(float)img_w;
+         img_data[i*img_w*4 + j*4] = 50;  //Red
+         img_data[i*img_w*4 + j*4 + 1] = fj*150;  //Green
+         img_data[i*img_w*4 + j*4 + 2] = fi*250;  //Blue
+         img_data[i*img_w*4 + j*4 + 3] = 255;  //Alpha
+      }
+   }
+
+   return img_data;
+}
 
 void makeShip() {
   string line;
@@ -39,8 +93,8 @@ void makeShip() {
 	string valuesX, valuesY, valuesZ;
 	float verts[4475*3];
 	float uvMap[4475*2];
-  int vertCount = 0;
-  int lineCount = 0;
+    int vertCount = 0;
+    int lineCount = 0;
 	int uvCount = 0;
 	float vertNorm[4475*3];
 	int normCount = 0;
@@ -163,9 +217,6 @@ void printShitMatey(float ex[],int length) {
   }
 }
 
-bool fullscreen = false;
-int screen_width = 800;
-int screen_height = 600;
 void loadShader(GLuint shaderID, const GLchar* shaderSource){
   glShaderSource(shaderID, 1, &shaderSource, NULL);
   glCompileShader(shaderID);
@@ -178,16 +229,19 @@ void loadShader(GLuint shaderID, const GLchar* shaderSource){
     printf("Shader Compile Failed. Info:\n\n%s\n",buffer);
   }
 }
+
 #define GLM_FORCE_RADIANS //ensure we are using radians
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+
 const GLchar* vertexSource =
 "#version 150 core\n"
 "in vec3 position;"
-"const vec3 inColor = vec3(0.f,0.7f,0.f);"
 "in vec3 inNormal;"
-"const vec3 inlightDir = normalize(vec3(1,0,0));"
+"in vec3 inColor;"
+"in vec2 inTexcoord;"
+"const vec3 inlightDir = normalize(vec3(0,0,-1));"
 "uniform mat4 model;"
 "uniform mat4 view;"
 "uniform mat4 proj;"
@@ -197,6 +251,7 @@ const GLchar* vertexSource =
 "out vec3 pos;"
 "out vec3 eyePos;"
 "out vec3 lightDir;"
+"out vec2 texcoord;"
 
 "void main() {"
 "   Color = inColor;"
@@ -206,31 +261,34 @@ const GLchar* vertexSource =
 "   normal = norm4.xyz;"
 "   lightDir = (view * vec4(inlightDir,0)).xyz;"  //Transform light into to view space
 "   gl_Position = proj * pos4;"
+"   texcoord = inTexcoord;"
 "}";
 
 
 const GLchar* fragmentSource =
   "#version 150 core\n"
+  "uniform sampler2D tex0;"
   "in vec3 Color;"
   "in vec3 normal;"
   "in vec3 pos;"
   "in vec3 eyePos;"
   "in vec3 lightDir;"
-  "out vec4 outColor;"
-  "const float ambient = .3;"
+  "in vec2 texcoord;"
+  "out vec3 outColor;"
+  "const float ambient = .2;"
   "void main() {"
   "   vec3 N = normalize(normal);" //Re-normalized the interpolated normals
   "   vec3 diffuseC = Color*max(dot(lightDir,N),0.0);"
   "   vec3 ambC = Color*ambient;"
   "   vec3 reflectDir = reflect(-lightDir,N);"
-  "   vec3 viewDir = normalize(-pos);"  //We know the eye is at 0,0
+  "   vec3 viewDir = normalize(eyePos-pos);"  //We know the eye is at 0,0
   "   float spec = max(dot(reflectDir,viewDir),0.0);"
   "   if (dot(lightDir,N) <= 0.0) spec = 0;"
   "   vec3 specC = vec3(.8,.8,.8)*pow(spec,4);"
-  "   outColor = vec4(ambC+diffuseC+specC, 1.0);"
+  "   outColor = texture(tex0, texcoord).rgb;"
   "}";
 
-
+//"   outColor = vec4(ambC+diffuseC+specC, 1.0);"
 
 int main(int argc, char *argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);  //Initialize Graphics (for OpenGL)
@@ -265,10 +323,45 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	
+	//Allocate Texture 0 
+	cout << "textures loaded\n"; 
+	GLuint tex0;
+	glGenTextures(1, &tex0);
+	glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex0);
+    
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	//load texture image
+	int wi, hi, nrChannels;
+	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+	unsigned char* imgData = loadImage(wi,hi);
+	printf("Loaded Image of size (%d,%d)\n",wi,hi);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
 	makeShip(); // This is surprising but this makes a ship
 	cout << "ship made \n"; 
+	//errors in this area
+	
+	//Build a Vertex Array Object. This stores the VBO and attribute mappings in one object
+	GLuint vao;
+	glGenVertexArrays(1, &vao); //Create a VAO
+	glBindVertexArray(vao); //Bind the above created VAO to the current context
+	
+	//Allocate memory on the graphics card to store geometry (vertex buffer object)
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float), modelData, GL_DYNAMIC_DRAW);
+	
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	loadShader(vertexShader, vertexSource);
+	
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	loadShader(fragmentShader, fragmentSource);
 
@@ -280,50 +373,28 @@ int main(int argc, char *argv[]) {
 	glLinkProgram(shaderProgram); //run the linker
 
 	cout << "color made \n"; 
-	GLuint vao;
-	glGenVertexArrays(1, &vao); //Create a VAO
-	glBindVertexArray(vao); //Bind the above created VAO to the current context
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float), modelData, GL_STATIC_DRAW);
+
 
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
 	//Attribute, vals/attrib., type, isNormalized, stride, offset
 	glEnableVertexAttribArray(posAttrib);
-	
 	cout << "potition made \n"; 
-	//load texture
 	
-	cout << "textures loaded made \n"; 
-	GLuint tex;
-	int wi, hi, nrChannels;
-	unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-    stbi_image_free(imgData);
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	unsigned int texture; 
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
-	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
-	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
-	glEnableVertexAttribArray(texAttrib);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	cout << "texture made \n"; 
 	GLint normAttrib = glGetAttribLocation(shaderProgram, "inNormal");
 	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(normAttrib);
 	cout << "normals made \n"; 
+
+	GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
+    glEnableVertexAttribArray(texAttrib);
+    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+   	cout << "texture made \n";
+   	
+   GLint colAttrib = glGetAttribLocation(shaderProgram, "inColor");
+   glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
+   glEnableVertexAttribArray(colAttrib);
+
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -370,6 +441,8 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_SwapWindow(window); //Double buffering
 	}
+	
+	delete [] imgData;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
