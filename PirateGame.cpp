@@ -42,18 +42,23 @@ int screen_height = 600;
 
 glm::vec3 camPos = glm::vec3(6.0f, 0.0f, 4.0f);  //Cam Position
 glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
+glm::vec3 shipDir = glm::vec3(0.0f,0.1f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
-void translateObject(int size, float xtrans, float ytrans, float ztrans){
+void translateShip(int size, float xtrans, float ytrans, float ztrans){
 	for(int x =0; x < size; x += 8){
 		modelData[x] += xtrans;
 		modelData[x+1] += ytrans;
 		modelData[x+2] += ztrans;
 	}
+  shipPos[0] += xtrans;
+  shipPos[1] += ytrans;
+  shipPos[2] += ztrans;
+
 }
 
-void rotateObject(int size, float xcen, float ycen, float zcen, float rotAngle){
-	translateObject(size, -xcen, -ycen, -zcen);
+void rotateShip(int size, float xcen, float ycen, float zcen, float rotAngle){
+	translateShip(size, -xcen, -ycen, -zcen);
 
 	float xp , yp, xnp, ynp;
 	for(int x =0; x < size; x += 8){
@@ -67,7 +72,7 @@ void rotateObject(int size, float xcen, float ycen, float zcen, float rotAngle){
 		modelData[x+4] = (ynp * cos(rotAngle) + xnp*sin(rotAngle)) - modelData[x+1];
 	}
 
-	translateObject(size, xcen, ycen, zcen);
+	translateShip(size, xcen, ycen, zcen);
 }
 
 unsigned char* loadImage(string tName, int& img_w, int& img_h){
@@ -582,8 +587,8 @@ int main(int argc, char *argv[]) {
 			camRight = glm::normalize(camRight);
 			glm::vec3 newPos;
 		}
-
-		rotateObject(4475*8*2, 0, 0, 0, 0.02);
+    translateShip(4475*8*2,shipDir.x,shipDir.y, shipDir.z);
+		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
     glBindBuffer(GL_ARRAY_BUFFER,vbo);
     glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float),modelData,GL_DYNAMIC_DRAW);
 		// Clear the screen to default color
