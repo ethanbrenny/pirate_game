@@ -8,6 +8,11 @@ using namespace std;
 #include <stdio.h>
 #include <stdarg.h>
 
+#define GLM_FORCE_RADIANS //ensure we are using radians
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb-master/stb_image.h"
 
@@ -29,11 +34,16 @@ GLuint fb =1;
 
 int height, width;
 
-string textureName = "goldy.ppm";
+string textureName = "ship.ppm";
 
 bool fullscreen = false;
 int screen_width = 800;
 int screen_height = 600;
+
+glm::vec3 camPos = glm::vec3(6.0f, 0.0f, 4.0f);  //Cam Position
+glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
+glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
+
 
 unsigned char* loadImage(int& img_w, int& img_h){
 
@@ -77,20 +87,6 @@ unsigned char* loadImage(int& img_w, int& img_h){
      img_data[i++] = blue;  //Blue
      img_data[i++] = alpha;  //Alpha
    }
-
-
-   //TODO: This loop puts in fake data, replace with the actual pixels read from the file
-   /*for (int i = 0; i < img_h; i++){
-      float fi = i/(float)img_h;
-      for (int j = 0; j < img_w; j++){
-         float fj = j/(float)img_w;
-         img_data[i*img_w*4 + j*4] = 0;  //Red
-         img_data[i*img_w*4 + j*4 + 1] = fj;  //Green
-         img_data[i*img_w*4 + j*4 + 2] = fi;  //Blue
-         img_data[i*img_w*4 + j*4 + 3] = 255;  //Alpha
-      }
-   }*/
-
    return img_data;
 }
 
@@ -175,7 +171,7 @@ void makeShip() {
 						modelData[modelIndex++] = vertNorm[incNormy++];
 						modelData[modelIndex++] = vertNorm[incNormy++];
 						modelData[modelIndex++] = uvMap[incMap++];
-						modelData[modelIndex++] = uvMap[incMap++];
+						modelData[modelIndex++] = 1-uvMap[incMap++];
 					}
 				}
 				//if f is followed by 4 vertices (a, b, c, d), add them as (a, b, c) & (b, c, d)
@@ -189,7 +185,7 @@ void makeShip() {
 						modelData[modelIndex++] = vertNorm[incNormy++];
 						modelData[modelIndex++] = vertNorm[incNormy++];
 						modelData[modelIndex++] = uvMap[incMap++];
-						modelData[modelIndex++] = uvMap[incMap++];
+						modelData[modelIndex++] = 1-uvMap[incMap++];
 					}
 					incVerty -= 3;
 					incNormy -= 3;
@@ -207,7 +203,7 @@ void makeShip() {
 						modelData[modelIndex++] = vertNorm[incNormy++];
 						modelData[modelIndex++] = vertNorm[incNormy++];
 						modelData[modelIndex++] = uvMap[incMap++];
-						modelData[modelIndex++] = uvMap[incMap++];
+						modelData[modelIndex++] = 1-uvMap[incMap++];
 					}
           incVerty += 9;
           incNormy += 9;
@@ -277,15 +273,15 @@ const GLchar* vertexSource =
 const GLchar* fragmentSource =
   "#version 150 core\n"
   "uniform sampler2D tex0;"
-  "in vec3 Color;"
   "in vec3 normal;"
   "in vec3 pos;"
   "in vec3 eyePos;"
   "in vec3 lightDir;"
   "in vec2 texcoord;"
   "out vec3 outColor;"
-  "const float ambient = .2;"
+  "const float ambient = .3;"
   "void main() {"
+  "   vec3 Color = vec3(1,1,1);"
   "   vec3 N = normalize(normal);" //Re-normalized the interpolated normals
   "   vec3 diffuseC = Color*max(dot(lightDir,N),0.0);"
   "   vec3 ambC = Color*ambient;"
@@ -294,7 +290,7 @@ const GLchar* fragmentSource =
   "   float spec = max(dot(reflectDir,viewDir),0.0);"
   "   if (dot(lightDir,N) <= 0.0) spec = 0;"
   "   vec3 specC = vec3(.8,.8,.8)*pow(spec,4);"
-  "   outColor = texture(tex0, texcoord).rgb;"
+  "   outColor = texture(tex0, texcoord).rgb * (ambC+diffuseC);"
   "}";
 
 //"   outColor = vec4(ambC+diffuseC+specC, 1.0);"
@@ -418,6 +414,18 @@ int main(int argc, char *argv[]) {
 				fullscreen = !fullscreen;
 				SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
 			}
+			
+			glm::vec3 camForward = shipPos - camPos; 
+			camForward = glm::normalize(camForward); 
+			glm::vec3 camLeft = glm::cross(camForward,camUp); 
+			camLeft = glm::normalize(camLeft); 
+			glm::vec3 camBack = camPos - shipPos; 
+			camBack = glm::normalize(camBack); 
+			glm::vec3 camRight = glm::cross(camUp, camForward); 
+			camRight = glm::normalize(camRight); 
+			glm::vec3 newPos;
+			
+			
 		}
 		// Clear the screen to default color
 		glClearColor(.2f, 0.4f, 0.8f, 1.0f);
@@ -431,9 +439,10 @@ int main(int argc, char *argv[]) {
 		glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
 		glm::mat4 view = glm::lookAt(
-		glm::vec3(6.0f, 0.0f, 4.0f),  //Cam Position
-		glm::vec3(0.0f, 0.0f, 1.0f),  //Look at point
-		glm::vec3(0.0f, 0.0f, 1.0f)); //Up
+		camPos,  //Cam Position
+		shipPos,  //Look at point
+		camUp); //Up
+		
 		GLint uniView = glGetUniformLocation(shaderProgram, "view");
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 		glm::mat4 proj = glm::perspective(3.14f/4, aspect, 0.01f, 100.0f);
