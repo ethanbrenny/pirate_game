@@ -28,7 +28,6 @@ using namespace std;
 using std::ifstream;
 float* modelData = new float[4475*8];
 float* waterData = new float[89856]; // 11232 * 8 vertices
-
   GLfloat waterSquare[] = {
    // X      Y     Z     R     G      B      U      V
      -0.25f,  0.25f,  0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // first tri
@@ -478,6 +477,35 @@ void drawObject(float* data,GLuint shaderP, GLuint vao, GLuint vbo[],int numVer,
   glDrawArrays(GL_TRIANGLES, 0, 36); //Number of vertices
   */
 }
+
+void attachTexture(unsigned char* img,int a, int b) {
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, a, b, 0, GL_RGB, GL_UNSIGNED_BYTE, img);
+ 	glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+void drawBackground(GLuint shaderP, GLuint vao, GLuint vbo[]) {
+  float distance_away = 28.2;
+  float curX = shipPos.x;
+  float curY = shipPos.y;
+  float curZ = shipPos.z;
+  float rightX = curX + distance_away;
+  float leftX = curX - distance_away;
+  float forwardY = curY + distance_away;
+  float backwardY = curY - distance_away;
+  float upZ = curZ + 40;
+  float midZ = curZ + 20;
+  float background[] = {
+   // X      Y     Z     R     G      B      U      V
+     leftX, forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // first tri
+     leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+     leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f, // first tri
+     rightX,forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+     rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
+   };
+  drawObject(background,shaderP, vao, vbo,48,48);
+}
+
 void printShitMatey(float ex[],int length) {
   for (int i=0;i<length;i+=3) {
     cout<<" vals at ("<<i<<"): "<<ex[i]<<endl;
@@ -607,6 +635,9 @@ int main(int argc, char *argv[]) {
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* imgData = loadImage("ship.ppm",wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
+  int v1, v2, nChan;
+ //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+  unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -772,8 +803,11 @@ int main(int argc, char *argv[]) {
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
+    attachTexture(imgData,wi,hi);
     drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
     drawObject(waterData,shaderProgram, vao, &vbo,30000, 30000);
+    attachTexture(skyImg,v1,v2);
+    drawBackground(shaderProgram,vao,&vbo);
 		//glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
 		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
@@ -781,6 +815,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	delete [] imgData;
+  delete [] skyImg;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
