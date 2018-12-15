@@ -26,23 +26,45 @@ using namespace std;
 #include <fstream>
 
 using std::ifstream;
-float* modelData = new float[4475*8*2];
+float* modelData = new float[4475*8];
+float* waterData = new float[89856]; // 11232 * 8 vertices
+void makeWater() {
+
+  GLfloat waterSquare[] = {
+   // X      Y     Z     R     G      B      U      V
+     -0.25f,  0.25f,  0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // first tri
+     -.25f, -0.25f,   0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     0.0f, 0.0f,      0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     -0.25f, 0.25f,   0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     0.25f, 0.25f,    0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     0.0f, 0.0f,      0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+
+     0.25f,  0.25f,   0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // second tri
+     0.25f, -0.25f,   0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     0.0f, 0.0f,      0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     0.25f, -0.25f,   0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     -0.25f, -0.25f,  0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+     0.0f, 0.0f,      0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+
+   };
+
+}
+
 int numLines = 0;
 int numVerts = 0;
 GLuint texture;
 GLuint fb =1;
 
 int height, width;
-
 string textureName = "ship.ppm";
 
 bool fullscreen = false;
 int screen_width = 800;
 int screen_height = 600;
 
-glm::vec3 camPos = glm::vec3(6.0f, 0.0f, 4.0f);  //Cam Position
+glm::vec3 camPos = glm::vec3(7.0f, 0.0f, 3.0f);  //Cam Position
 glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
-glm::vec3 shipDir = glm::vec3(0.0f,0.1f,0.0f);
+glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
@@ -54,11 +76,11 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
   shipPos[0] += xtrans;
   shipPos[1] += ytrans;
   shipPos[2] += ztrans;
-  
+
   camPos[0] += xtrans;
   camPos[1] += ytrans;
   camPos[2] += ztrans;
-  
+
 
 }
 
@@ -572,14 +594,14 @@ int main(int argc, char *argv[]) {
 
 	SDL_Event windowEvent;
 	bool quit = false;
-	
+
 	SDL_SetRelativeMouseMode(SDL_TRUE);
-	
+
 	float xsens = -0.002;
-	float ysens = -0.002; 
-	float distToShip = 6.0; 
+	float ysens = -0.002;
+	float distToShip = 6.0;
 	float needToMove = 0.0;
-	
+  float shipSpeed = 0.01;
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
@@ -589,7 +611,7 @@ int main(int argc, char *argv[]) {
 				fullscreen = !fullscreen;
 				SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
 			}
-			
+
 			glm::vec3 camForward = shipPos - camPos;
 			camForward = glm::normalize(camForward);
 			glm::vec3 camLeft = glm::cross(camForward,camUp);
@@ -599,53 +621,54 @@ int main(int argc, char *argv[]) {
 			glm::vec3 camRight = glm::cross(camUp, camForward);
 			camRight = glm::normalize(camRight);
 			glm::vec3 newPos;
-			
-			
+
+
 			float rotSpeed = 0.01;
 			//left
-			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_a){ 
-				float xval, yval; 
+      glm::normalize(shipDir);
+			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_a){
+				float xval, yval;
 				xval = shipDir.x * cos(rotSpeed) - shipDir.y*sin(rotSpeed);
 				yval = shipDir.y * cos(rotSpeed) + shipDir.x*sin(rotSpeed);
-				shipDir.x = xval; 
-				shipDir.y = yval; 
-				
+				shipDir.x = xval;
+				shipDir.y = yval;
+
 				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, rotSpeed);
 			}
 			//right
-			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_d){ 
-				float xval, yval; 
+			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_d){
+				float xval, yval;
 				xval = shipDir.x * cos(-rotSpeed) - shipDir.y*sin(-rotSpeed);
 				yval = shipDir.y * cos(-rotSpeed) + shipDir.x*sin(-rotSpeed);
-				shipDir.x = xval; 
-				shipDir.y = yval; 
-				
+				shipDir.x = xval;
+				shipDir.y = yval;
+
 				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, -rotSpeed);
-			} 
-			
-			if (windowEvent.type == SDL_MOUSEMOTION){ 
+			}
+
+			if (windowEvent.type == SDL_MOUSEMOTION){
 				//scale left vector
 				glm::vec3 scaledRight = camRight * 0.1f;
 				//add left vector to current position
-				
+
 				camPos += camLeft * float(windowEvent.motion.xrel)*xsens;
-			}   
+			}
 			distToShip = (camPos.x - shipPos.x)*(camPos.x - shipPos.x) + (camPos.y - shipPos.y) * (camPos.y - shipPos.y);
-			glm::vec3 toShip= shipPos - camPos; 
+			glm::vec3 toShip= shipPos - camPos;
 			toShip.z = 0;
 			glm::normalize(toShip);
 			if (distToShip > 36.001){
 				camPos += toShip * 0.001f;
-				//cout << distToShip <<endl; 
+				//cout << distToShip <<endl;
 			}
 			else if (distToShip < 35.999){
 				camPos -= toShip * 0.001f;
-				//cout << distToShip <<endl; 
+				//cout << distToShip <<endl;
 			}
-			
-			
+
+
 		}
-		translateShip(4475*8*2,shipDir.x,shipDir.y, shipDir.z);
+		translateShip(4475*8*2,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
 		glBindBuffer(GL_ARRAY_BUFFER,vbo);
 		glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float),modelData,GL_DYNAMIC_DRAW);
