@@ -54,6 +54,11 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
   shipPos[0] += xtrans;
   shipPos[1] += ytrans;
   shipPos[2] += ztrans;
+  
+  camPos[0] += xtrans;
+  camPos[1] += ytrans;
+  camPos[2] += ztrans;
+  
 
 }
 
@@ -567,6 +572,14 @@ int main(int argc, char *argv[]) {
 
 	SDL_Event windowEvent;
 	bool quit = false;
+	
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+	
+	float xsens = -0.002;
+	float ysens = -0.002; 
+	float distToShip = 6.0; 
+	float needToMove = 0.0;
+	
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
@@ -576,6 +589,18 @@ int main(int argc, char *argv[]) {
 				fullscreen = !fullscreen;
 				SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
 			}
+			
+			glm::vec3 camForward = shipPos - camPos;
+			camForward = glm::normalize(camForward);
+			glm::vec3 camLeft = glm::cross(camForward,camUp);
+			camLeft = glm::normalize(camLeft);
+			glm::vec3 camBack = camPos - shipPos;
+			camBack = glm::normalize(camBack);
+			glm::vec3 camRight = glm::cross(camUp, camForward);
+			camRight = glm::normalize(camRight);
+			glm::vec3 newPos;
+			
+			
 			float rotSpeed = 0.01;
 			//left
 			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_a){ 
@@ -598,20 +623,32 @@ int main(int argc, char *argv[]) {
 				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, -rotSpeed);
 			} 
 			
-			glm::vec3 camForward = shipPos - camPos;
-			camForward = glm::normalize(camForward);
-			glm::vec3 camLeft = glm::cross(camForward,camUp);
-			camLeft = glm::normalize(camLeft);
-			glm::vec3 camBack = camPos - shipPos;
-			camBack = glm::normalize(camBack);
-			glm::vec3 camRight = glm::cross(camUp, camForward);
-			camRight = glm::normalize(camRight);
-			glm::vec3 newPos;
+			if (windowEvent.type == SDL_MOUSEMOTION){ 
+				//scale left vector
+				glm::vec3 scaledRight = camRight * 0.1f;
+				//add left vector to current position
+				
+				camPos += camLeft * float(windowEvent.motion.xrel)*xsens;
+			}   
+			distToShip = (camPos.x - shipPos.x)*(camPos.x - shipPos.x) + (camPos.y - shipPos.y) * (camPos.y - shipPos.y);
+			glm::vec3 toShip= shipPos - camPos; 
+			toShip.z = 0;
+			glm::normalize(toShip);
+			if (distToShip > 36.001){
+				camPos += toShip * 0.001f;
+				//cout << distToShip <<endl; 
+			}
+			else if (distToShip < 35.999){
+				camPos -= toShip * 0.001f;
+				//cout << distToShip <<endl; 
+			}
+			
+			
 		}
-    translateShip(4475*8*2,shipDir.x,shipDir.y, shipDir.z);
+		translateShip(4475*8*2,shipDir.x,shipDir.y, shipDir.z);
 		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
-    glBindBuffer(GL_ARRAY_BUFFER,vbo);
-    glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float),modelData,GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER,vbo);
+		glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float),modelData,GL_DYNAMIC_DRAW);
 		// Clear the screen to default color
 		glClearColor(.2f, 0.4f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
