@@ -65,6 +65,7 @@ glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
 void makeWater(){
+
 	float xstart = -3.75;
 	float ystart = -3.75;
 	int indexofwater =0;
@@ -82,6 +83,7 @@ void makeWater(){
 			}
 		}
 	}
+
 
 }
 
@@ -425,7 +427,7 @@ void makeShip() {
 void drawObject(float* data,GLuint shaderP, GLuint vao, GLuint vbo[],int numVer,int numLin) {
   // numLines and numVerts
   glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); //Set the first vbo as the active  buffer
-  glBufferData(GL_ARRAY_BUFFER, numLin*sizeof(float), modelData, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, numLin*sizeof(float), data, GL_DYNAMIC_DRAW);
   GLint posAttrib = glGetAttribLocation(shaderP, "position");
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
 
@@ -665,6 +667,7 @@ int main(int argc, char *argv[]) {
 	float distToShip = 6.0;
 	float needToMove = 0.0;
   float shipSpeed = 0.01;
+  makeWater();
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
@@ -763,6 +766,7 @@ int main(int argc, char *argv[]) {
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
     drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
+    drawObject(waterData,shaderProgram, vao, &vbo,30000, 30000);
 		//glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
 		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
