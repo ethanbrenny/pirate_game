@@ -28,7 +28,6 @@ using namespace std;
 using std::ifstream;
 float* modelData = new float[4475*8];
 float* waterData = new float[89856]; // 11232 * 8 vertices
-void makeWater() {
 
   GLfloat waterSquare[] = {
    // X      Y     Z     R     G      B      U      V
@@ -48,8 +47,6 @@ void makeWater() {
 
    };
 
-}
-
 int numLines = 0;
 int numVerts = 0;
 GLuint texture;
@@ -66,6 +63,27 @@ glm::vec3 camPos = glm::vec3(7.0f, 0.0f, 3.0f);  //Cam Position
 glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
 glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
+
+void makeWater(){
+	float xstart = -3.75;
+	float ystart = -3.75; 
+	int indexofwater =0; 
+	int squareIndex = 0;
+	
+	for (int i = 0; i < 16; i++){
+		for (int j = 0; j < 16; j ++){
+			squareIndex =0; 
+			for (int l =0; l< 12; l ++){
+				waterData{indexofwater++] = waterSquare[sqareIndex++] + xstart + 0.5*i;
+				waterData{indexofwater++] = waterSquare[sqareIndex++] + ystart + 0.5*j;
+				for (int k =0; k < 6; k++){
+					waterData[indexofwater++] = waterSquare[sqareIndex++]
+				}
+			}
+		}
+	}
+	
+}
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
 	for(int x =0; x < size; x += 8){
