@@ -66,23 +66,23 @@ glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
 void makeWater(){
 	float xstart = -3.75;
-	float ystart = -3.75; 
-	int indexofwater =0; 
+	float ystart = -3.75;
+	int indexofwater =0;
 	int squareIndex = 0;
-	
+
 	for (int i = 0; i < 16; i++){
 		for (int j = 0; j < 16; j ++){
-			squareIndex =0; 
+			squareIndex =0;
 			for (int l =0; l< 12; l ++){
-				waterData{indexofwater++] = waterSquare[sqareIndex++] + xstart + 0.5*i;
-				waterData{indexofwater++] = waterSquare[sqareIndex++] + ystart + 0.5*j;
+				waterData[indexofwater++] = waterSquare[squareIndex++] + xstart + 0.5*i;
+				waterData[indexofwater++] = waterSquare[squareIndex++] + ystart + 0.5*j;
 				for (int k =0; k < 6; k++){
-					waterData[indexofwater++] = waterSquare[sqareIndex++]
+					waterData[indexofwater++] = waterSquare[squareIndex++];
 				}
 			}
 		}
 	}
-	
+
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
@@ -422,7 +422,52 @@ void makeShip() {
 	}
   numLines = numVerts * 8 ;
 }
+void drawObject(float* data,GLuint shaderP, GLuint vao, GLuint vbo[],int numVer,int numLin) {
+  // numLines and numVerts
+  glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); //Set the first vbo as the active  buffer
+  glBufferData(GL_ARRAY_BUFFER, numLin*sizeof(float), modelData, GL_DYNAMIC_DRAW);
+  GLint posAttrib = glGetAttribLocation(shaderP, "position");
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
 
+	glEnableVertexAttribArray(posAttrib);
+
+	GLint normAttrib = glGetAttribLocation(shaderP, "inNormal");
+	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(normAttrib);
+
+	GLint texAttrib = glGetAttribLocation(shaderP, "inTexcoord");
+  glEnableVertexAttribArray(texAttrib);
+  glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+
+  GLint colAttrib = glGetAttribLocation(shaderP, "inColor");
+  glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
+  glEnableVertexAttribArray(colAttrib);
+  glUseProgram(shaderP); //Set the active shader program
+  glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
+  glDrawArrays(GL_TRIANGLES, 0, numVer); //Number of vertices
+  /*
+  glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); //Set the first vbo as the active  buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  GLint posAttrib = glGetAttribLocation(shaderP, "position");
+  glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0);
+                  //Attribute, vals/attrib., type, isNormalized, stride, offset
+  glEnableVertexAttribArray(posAttrib);
+
+  GLint colAttrib = glGetAttribLocation(shaderP, "inColor");
+  glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
+                        8*sizeof(float), (void*)(3*sizeof(float)));
+  glEnableVertexAttribArray(colAttrib);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+  //glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW); //upload normals to vbo
+  GLint normAttrib = glGetAttribLocation(shaderP, "inNormal");
+  glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(normAttrib);
+
+  glUseProgram(shaderP); //Set the active shader program
+  glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
+  glDrawArrays(GL_TRIANGLES, 0, 36); //Number of vertices
+  */
+}
 void printShitMatey(float ex[],int length) {
   for (int i=0;i<length;i+=3) {
     cout<<" vals at ("<<i<<"): "<<ex[i]<<endl;
@@ -717,7 +762,8 @@ int main(int argc, char *argv[]) {
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
-		glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
+    drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
+		//glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
 		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
 		SDL_GL_SwapWindow(window); //Double buffering
