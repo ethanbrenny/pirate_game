@@ -576,7 +576,28 @@ int main(int argc, char *argv[]) {
 				fullscreen = !fullscreen;
 				SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
 			}
-
+			float rotSpeed = 0.01;
+			//left
+			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_a){ 
+				float xval, yval; 
+				xval = shipDir.x * cos(rotSpeed) - shipDir.y*sin(rotSpeed);
+				yval = shipDir.y * cos(rotSpeed) + shipDir.x*sin(rotSpeed);
+				shipDir.x = xval; 
+				shipDir.y = yval; 
+				
+				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, rotSpeed);
+			}
+			//right
+			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_d){ 
+				float xval, yval; 
+				xval = shipDir.x * cos(-rotSpeed) - shipDir.y*sin(-rotSpeed);
+				yval = shipDir.y * cos(-rotSpeed) + shipDir.x*sin(-rotSpeed);
+				shipDir.x = xval; 
+				shipDir.y = yval; 
+				
+				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, -rotSpeed);
+			} 
+			
 			glm::vec3 camForward = shipPos - camPos;
 			camForward = glm::normalize(camForward);
 			glm::vec3 camLeft = glm::cross(camForward,camUp);
