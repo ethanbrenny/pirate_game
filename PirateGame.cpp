@@ -104,6 +104,14 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 
 }
 
+void translateWater(int size, float xtrans, float ytrans, float ztrans){
+	for(int x =0; x < size; x += 8){
+		waterData[x] += xtrans;
+		waterData[x+1] += ytrans;
+		waterData[x+2] += ztrans;
+	}
+}
+
 void rotateShip(int size, float xcen, float ycen, float zcen, float rotAngle){
 	translateShip(size, -xcen, -ycen, -zcen);
 
@@ -691,7 +699,7 @@ int main(int argc, char *argv[]) {
 
 			float rotSpeed = 0.01;
 			//left
-      glm::normalize(shipDir);
+			glm::normalize(shipDir);
 			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_a){
 				float xval, yval;
 				xval = shipDir.x * cos(rotSpeed) - shipDir.y*sin(rotSpeed);
@@ -731,10 +739,9 @@ int main(int argc, char *argv[]) {
 				camPos -= toShip * 0.001f;
 				//cout << distToShip <<endl;
 			}
-
-
 		}
 		translateShip(4475*8*2,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
+		translateWater(30000,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
 		glBindBuffer(GL_ARRAY_BUFFER,vbo);
 		glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float),modelData,GL_DYNAMIC_DRAW);
