@@ -8,6 +8,8 @@ using namespace std;
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <time.h>
+
 #define GLM_FORCE_RADIANS //ensure we are using radians
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -63,6 +65,9 @@ glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
 glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
+float timer1; 
+clock_t startTime; 
+
 void makeWater(){
 
 	float xstart = -3.75;
@@ -102,12 +107,42 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 
 
 }
+void makeWave(float xpos, float ypos, int index){
+	float zpos =0;
+	
+	float waveHeight = 0.1; 
+	float waterHeight = 0.1; 
+	float waveSpeed = 2.1; 
+	
+	zpos = sin(xpos + ypos + timer1*waveSpeed) * waveHeight + waterHeight; 
+	//zpos += sin((xpos - ypos + timer1)*5) * 0.02;
+	//z pos
+	waterData[index+2] = zpos;
+	
+	float tangent = cos(xpos + ypos + timer1*waveSpeed)*waveHeight;
+	
+	if(tangent < 0.01 && tangent >= 0.0){
+		tangent = 0.01; 
+	}
+	else if (tangent > -0.01 && tangent <= 0.0){
+		tangent = -0.01;
+	}
+	
+	tangent = 1/tangent;
+	
+	//x normal
+	waterData[index+3] = tangent;
+	
+	//y normal
+	waterData[index+4] = tangent; 
+}
 
 void translateWater(int size, float xtrans, float ytrans, float ztrans){
+	timer1 = (clock() - startTime) / float(CLOCKS_PER_SEC);
 	for(int x =0; x < size; x += 8){
 		waterData[x] += xtrans;
 		waterData[x+1] += ytrans;
-		waterData[x+2] += ztrans;
+		makeWave(waterData[x], waterData[x+1], x);
 	}
 }
 
