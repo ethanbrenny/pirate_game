@@ -30,7 +30,7 @@ using namespace std;
 using std::ifstream;
 float shipRotation = 0;
 float* modelData = new float[4475*8];
-float* waterData = new float[89856]; // 11232 * 8 vertices
+float* waterData = new float[100000]; // 11232 * 8 vertices
   GLfloat waterSquare[] = {
    // X      Y     Z     R     G      B      U      V
      -0.25f,  0.25f,  0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // first tri
@@ -69,13 +69,16 @@ glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 float timer1;
 clock_t startTime;
 
+int sizeOfWater =0; 
+
 void makeWater(){
 
 	float xstart = -3.75;
 	float ystart = -3.75;
 	int indexofwater =0;
 	int squareIndex = 0;
-
+	
+	//first layer
 	for (int i = 0; i < 16; i++){
 		for (int j = 0; j < 16; j ++){
 			squareIndex =0;
@@ -85,11 +88,32 @@ void makeWater(){
 				for (int k =0; k < 6; k++){
 					waterData[indexofwater++] = waterSquare[squareIndex++];
 				}
+				sizeOfWater += 8; 
 			}
 		}
 	}
-
-
+	
+	//second layer around the center double the size of triangles. 
+	for (int h =0; h < 9; h++){
+		if(h != 4){
+			xstart = -11.5 + 8 * (h%3);
+			ystart = -11.5 + 8 * (h/3);
+			for(int i =0; i < 8; i++){
+				for (int j =0; j < 8; j++){
+					squareIndex = 0; 
+					for (int l =0; l< 12; l ++){
+						waterData[indexofwater++] = waterSquare[squareIndex++]*2.01 + xstart + i;
+						waterData[indexofwater++] = waterSquare[squareIndex++]*2.01 + ystart + j;
+						for (int k =0; k < 6; k++){
+							waterData[indexofwater++] = waterSquare[squareIndex++];
+						}
+						sizeOfWater += 8; 
+					}
+				}
+			}
+		}
+	}
+	return; 
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
@@ -108,6 +132,7 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 
 
 }
+
 void makeWave(float xpos, float ypos, int index){
 	float zpos =0;
 
@@ -467,6 +492,7 @@ void makeShip() {
 	}
   numLines = numVerts * 8 ;
 }
+
 void drawObject(float* data,GLuint shaderP, GLuint vao, GLuint vbo[],int numVer,int numLin) {
   // numLines and numVerts
   glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); //Set the first vbo as the active  buffer
@@ -715,9 +741,9 @@ int main(int argc, char *argv[]) {
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* imgData = loadImage("ship.ppm",wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
-  int v1, v2, nChan;
- //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-  unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
+    int v1, v2, nChan;
+   //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+    unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -785,8 +811,10 @@ int main(int argc, char *argv[]) {
 	float ysens = -0.002;
 	float distToShip = 6.0;
 	float needToMove = 0.0;
-  float shipSpeed = 0.01;
-  makeWater();
+    float shipSpeed = 0.01;
+    makeWater();
+    cout << sizeOfWater << endl;
+    
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
@@ -851,7 +879,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		translateShip(4475*8*2,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
-		translateWater(30000,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
+		translateWater(sizeOfWater,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
 		glBindBuffer(GL_ARRAY_BUFFER,vbo);
 		glBufferData(GL_ARRAY_BUFFER, numLines*sizeof(float),modelData,GL_DYNAMIC_DRAW);
@@ -882,11 +910,11 @@ int main(int argc, char *argv[]) {
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
-    attachTexture(imgData,wi,hi);
-    drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
-    drawObject(waterData,shaderProgram, vao, &vbo,30000, 30000);
-    attachTexture(skyImg,v1,v2);
-    drawBackground(shaderProgram,vao,&vbo);
+		attachTexture(imgData,wi,hi);
+		drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
+		drawObject(waterData,shaderProgram, vao, &vbo,sizeOfWater, sizeOfWater);
+		attachTexture(skyImg,v1,v2);
+		drawBackground(shaderProgram,vao,&vbo);
 		//glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
 		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
@@ -894,7 +922,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	delete [] imgData;
-  delete [] skyImg;
+    delete [] skyImg;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
