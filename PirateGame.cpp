@@ -28,6 +28,7 @@ using namespace std;
 #include <fstream>
 
 using std::ifstream;
+float shipRotation = 0;
 float* modelData = new float[4475*8];
 float* waterData = new float[89856]; // 11232 * 8 vertices
   GLfloat waterSquare[] = {
@@ -65,8 +66,8 @@ glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
 glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
-float timer1; 
-clock_t startTime; 
+float timer1;
+clock_t startTime;
 
 void makeWater(){
 
@@ -109,32 +110,32 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 }
 void makeWave(float xpos, float ypos, int index){
 	float zpos =0;
-	
-	float waveHeight = 0.1; 
-	float waterHeight = 0.1; 
-	float waveSpeed = 2.1; 
-	
-	zpos = sin(xpos + ypos + timer1*waveSpeed) * waveHeight + waterHeight; 
+
+	float waveHeight = 0.1;
+	float waterHeight = 0.1;
+	float waveSpeed = 2.1;
+
+	zpos = sin(xpos + ypos + timer1*waveSpeed) * waveHeight + waterHeight;
 	//zpos += sin((xpos - ypos + timer1)*5) * 0.02;
 	//z pos
 	waterData[index+2] = zpos;
-	
+
 	float tangent = cos(xpos + ypos + timer1*waveSpeed)*waveHeight;
-	
+
 	if(tangent < 0.01 && tangent >= 0.0){
-		tangent = 0.01; 
+		tangent = 0.01;
 	}
 	else if (tangent > -0.01 && tangent <= 0.0){
 		tangent = -0.01;
 	}
-	
+
 	tangent = 1/tangent;
-	
+
 	//x normal
 	waterData[index+3] = tangent;
-	
+
 	//y normal
-	waterData[index+4] = tangent; 
+	waterData[index+4] = tangent;
 }
 
 void translateWater(int size, float xtrans, float ytrans, float ztrans){
@@ -531,14 +532,35 @@ void drawBackground(GLuint shaderP, GLuint vao, GLuint vbo[]) {
   float midZ = curZ + 20;
   float background[] = {
    // X      Y     Z     R     G      B      U      V
-     leftX, forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // first tri
+     leftX, forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // forw background
      leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
      rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-     leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f, // first tri
      rightX,forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-     rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
+     leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+
+     leftX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, //  back background
+     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     rightX,backwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+     rightX,backwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     rightX,backwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+
+     leftX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, //  left background
+     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     leftX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+     leftX,  forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     leftX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+
+     rightX,  forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+     rightX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     rightX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+     rightX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, //  right background
+     rightX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     rightX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
    };
-  drawObject(background,shaderP, vao, vbo,48,48);
+  drawObject(background,shaderP, vao, vbo,192,192);
 }
 
 void printShitMatey(float ex[],int length) {
@@ -559,6 +581,29 @@ void loadShader(GLuint shaderID, const GLchar* shaderSource){
     printf("Shader Compile Failed. Info:\n\n%s\n",buffer);
   }
 }
+
+/*void rotateShipVertically(float amt) // amt + or - determines direction of shift
+{
+  shipRotation += amt;
+  //float vecX = 0;
+  //float vecY = 0;
+
+  glm::normalize(shipDir);
+  glm::vec3 vecToPoint = glm::vec3(0.0f,0.0f,0.0f);
+  float direct = 0.0;
+  for (int i = 0;i < 89856; i+=8) {
+    //shipRotation += changeIt;
+    vecToPoint.x = waterData[i] - shipPos.x;
+    vecToPoint.y = waterData[i+1] - shipPos.y;
+    glm::normalize(vecToPoint);
+    direct = glm::dot(vecToPoint,shipDir);
+    if (direct > 0) {
+      //waterData[i+2] += ;
+    } else {
+      //waterData[i+2] = 0;
+    }
+  }
+}*/
 
 #define GLM_FORCE_RADIANS //ensure we are using radians
 #include "glm/glm.hpp"
@@ -803,7 +848,6 @@ int main(int argc, char *argv[]) {
 			}
 			else if (distToShip < 35.999){
 				camPos -= toShip * 0.001f;
-				//cout << distToShip <<endl;
 			}
 		}
 		translateShip(4475*8*2,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
