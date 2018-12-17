@@ -70,6 +70,8 @@ float timer1;
 clock_t startTime;
 
 int sizeOfWater =0;
+float last = 0.0;
+float now = 0.0; 
 
 void makeWater(){
 
@@ -223,23 +225,26 @@ void makeWater(){
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
+	now = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * 0.05;
 	for(int x =0; x < size; x += 8){
 		modelData[x] += xtrans;
 		modelData[x+1] += ytrans;
-		modelData[x+2] += ztrans;
+		modelData[x+2] -= last;
+		modelData[x+2] += now;
+		
 	}
-  shipPos[0] += xtrans;
-  shipPos[1] += ytrans;
-  shipPos[2] += ztrans;
+	last = now; 
+    shipPos[0] += xtrans;
+    shipPos[1] += ytrans;
+    shipPos[2] += ztrans;
 
-  camPos[0] += xtrans;
-  camPos[1] += ytrans;
-  camPos[2] += ztrans;
+    camPos[0] += xtrans;
+    camPos[1] += ytrans;
+    camPos[2] += ztrans;
 
-
+	return; 
 }
 
-//changed
 void makeWave(float xpos, float ypos, int index){
 	float zpos =0;
   float tot = 0;
@@ -291,19 +296,54 @@ void translateWater(int size, float xtrans, float ytrans, float ztrans){
 	}
 }
 
-void rotateShip(int size, float xcen, float ycen, float zcen, float rotAngle){
+void rotateShip(int size, float xcen, float ycen, float zcen, float rotAngle, float xzrot, float yzrot){
 	translateShip(size, -xcen, -ycen, -zcen);
 
-	float xp , yp, xnp, ynp;
+	float xp , yp, zp, xnp, ynp, znp;
 	for(int x =0; x < size; x += 8){
 		xp = modelData[x];
 		yp = modelData[x+1];
+		zp = modelData[x+2];
+		
 		xnp = modelData[x] + modelData[x+3];
 		ynp = modelData[x+1] + modelData[x+4];
+		znp = modelData[x+2] + modelData[x+5];
+		
+		//flat rotate
 		modelData[x] = xp * cos(rotAngle) - yp*sin(rotAngle);
 		modelData[x+1] = yp * cos(rotAngle) + xp*sin(rotAngle);
 		modelData[x+3] = (xnp * cos(rotAngle) - ynp*sin(rotAngle)) - modelData[x];
 		modelData[x+4] = (ynp * cos(rotAngle) + xnp*sin(rotAngle)) - modelData[x+1];
+		
+		/*
+		xp = modelData[x];
+		yp = modelData[x+1];
+		zp = modelData[x+2];
+		
+		xnp = modelData[x] + modelData[x+3];
+		ynp = modelData[x+1] + modelData[x+4];
+		znp = modelData[x+2] + modelData[x+5];
+		
+		//xz rotate
+		modelData[x] = xp * cos(xzrot) - zp*sin(xzrot);
+		modelData[x+2] = zp * cos(xzrot) + xp*sin(xzrot);
+		modelData[x+3] = (xnp * cos(xzrot) - znp*sin(xzrot)) - modelData[x];
+		modelData[x+5] = (znp * cos(xzrot) + xnp*sin(xzrot)) - modelData[x+2];
+		
+		xp = modelData[x];
+		yp = modelData[x+1];
+		zp = modelData[x+2];
+		
+		xnp = modelData[x] + modelData[x+3];
+		ynp = modelData[x+1] + modelData[x+4];
+		znp = modelData[x+2] + modelData[x+5];
+		
+		//yz rotate
+		modelData[x+1] = yp * cos(yzrot) - zp*sin(yzrot);
+		modelData[x+2] = zp * cos(yzrot) + yp*sin(yzrot);
+		modelData[x+4] = (ynp * cos(xzrot) - znp*sin(yzrot)) - modelData[x+1];
+		modelData[x+5] = (znp * cos(xzrot) + ynp*sin(yzrot)) - modelData[x+2];
+		*/
 	}
 
 	translateShip(size, xcen, ycen, zcen);
@@ -861,13 +901,13 @@ int main(int argc, char *argv[]) {
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* imgData = loadImage("ship.ppm",wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
-  int v1, v2;
-  //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-  unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
+	int v1, v2;
+	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+	unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
 
-  int watX,watY;
-  //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-  unsigned char* watImg = loadImage("SeaTile.ppm",watX,watY);
+    int watX,watY;
+    //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+    unsigned char* watImg = loadImage("SeaTile.ppm",watX,watY);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -970,7 +1010,7 @@ int main(int argc, char *argv[]) {
 				shipDir.x = xval;
 				shipDir.y = yval;
 
-				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, rotSpeed);
+				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, rotSpeed, 0, 0);
 			}
 			//right
 			if (windowEvent.type == SDL_KEYDOWN && windowEvent.key.keysym.sym == SDLK_d){
@@ -980,7 +1020,7 @@ int main(int argc, char *argv[]) {
 				shipDir.x = xval;
 				shipDir.y = yval;
 
-				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, -rotSpeed);
+				rotateShip(4475*8*2, shipPos.x, shipPos.y, shipPos.z, -rotSpeed, 0 , 0);
 			}
 
 			if (windowEvent.type == SDL_MOUSEMOTION){
