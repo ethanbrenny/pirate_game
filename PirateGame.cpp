@@ -70,8 +70,11 @@ float timer1;
 clock_t startTime;
 
 int sizeOfWater =0;
-float last = 0.0;
-float now = 0.0; 
+float last[] = {0.0, 0.0, 0.0, 0.0, 0.0}; 
+float now[] = {0.0, 0.0, 0.0, 0.0, 0.0}; 
+float frontSlope, sideSlope;
+float oldSideSlope =0;
+float oldFrontSlope = 0;
 
 void makeWater(){
 
@@ -225,15 +228,40 @@ void makeWater(){
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
-	now = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * 0.05;
+	
+	now[0] = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * 0.05;
+	now[1] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * 0.01;
+	now[2] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * 0.01;
+	now[3] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * 0.01;
+	now[4] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * 0.01;
+	
+	float frontSlope = now[1] - now[2];
+	float sideSlope = now[3] - now[4];
+	
+	float xfromcent , oldxfromcent;
+	float yfromcent , oldyfromcent;
+	
 	for(int x =0; x < size; x += 8){
+		oldxfromcent = modelData[x] - (shipPos.x);
+		oldyfromcent = modelData[x+1] - (shipPos.y);
+		
 		modelData[x] += xtrans;
 		modelData[x+1] += ytrans;
-		modelData[x+2] -= last;
-		modelData[x+2] += now;
+		
+		xfromcent = modelData[x] - (shipPos.x + xtrans);
+		yfromcent = modelData[x+1] - (shipPos.y + ytrans);
+		
+		modelData[x+2] -= last[0] + oldFrontSlope*oldxfromcent + oldSideSlope*oldyfromcent;
+		modelData[x+2] += now[0] + frontSlope*xfromcent + sideSlope*yfromcent;
 		
 	}
-	last = now; 
+	for (int i =0; i < 5 ; i++){
+		last[i] = now[i]; 
+	}
+	oldFrontSlope = frontSlope;
+	oldSideSlope = sideSlope;
+	
+	
     shipPos[0] += xtrans;
     shipPos[1] += ytrans;
     shipPos[2] += ztrans;
