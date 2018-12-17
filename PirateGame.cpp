@@ -49,6 +49,8 @@ float* waterData = new float[100000]; // 11232 * 8 vertices
 
    };
 
+float Obelisks[] = {-10.0,-10.0,-15.0,10.0};
+
 int numLines = 0;
 int numVerts = 0;
 GLuint texture;
@@ -70,8 +72,8 @@ float timer1;
 clock_t startTime;
 
 int sizeOfWater =0;
-float last[] = {0.0, 0.0, 0.0, 0.0, 0.0}; 
-float now[] = {0.0, 0.0, 0.0, 0.0, 0.0}; 
+float last[] = {0.0, 0.0, 0.0, 0.0, 0.0};
+float now[] = {0.0, 0.0, 0.0, 0.0, 0.0};
 float frontSlope, sideSlope;
 float oldSideSlope =0;
 float oldFrontSlope = 0;
@@ -235,34 +237,34 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 	now[2] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * goof;
 	now[3] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * goof;
 	now[4] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * goof;
-	
+
 	float frontSlope = now[1] - now[2];
 	float sideSlope = now[3] - now[4];
-	
+
 	float xfromcent , oldxfromcent;
 	float yfromcent , oldyfromcent;
-	
+
 	for(int x =0; x < size; x += 8){
 		oldxfromcent = modelData[x] - (shipPos.x);
 		oldyfromcent = modelData[x+1] - (shipPos.y);
-		
+
 		modelData[x] += xtrans;
 		modelData[x+1] += ytrans;
-		
+
 		xfromcent = modelData[x] - (shipPos.x + xtrans);
 		yfromcent = modelData[x+1] - (shipPos.y + ytrans);
-		
+
 		modelData[x+2] -= last[0] + oldFrontSlope*oldxfromcent + oldSideSlope*oldyfromcent;
 		modelData[x+2] += now[0] + frontSlope*xfromcent + sideSlope*yfromcent;
-		
+
 	}
 	for (int i =0; i < 5 ; i++){
-		last[i] = now[i]; 
+		last[i] = now[i];
 	}
 	oldFrontSlope = frontSlope;
 	oldSideSlope = sideSlope;
-	
-	
+
+
     shipPos[0] += xtrans;
     shipPos[1] += ytrans;
     shipPos[2] += ztrans;
@@ -271,7 +273,7 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
     camPos[1] += ytrans;
     camPos[2] += ztrans;
 
-	return; 
+	return;
 }
 
 void makeWave(float xpos, float ypos, int index){
@@ -320,10 +322,10 @@ void translateWater(int size, float xtrans, float ytrans, float ztrans){
 		//positions
 		waterData[x] += xtrans;
 		waterData[x+1] += ytrans;
-		
+
 		//hiehgt
 		makeWave(waterData[x], waterData[x+1], x);
-		
+
 		//uv
 		waterData[x + 6] = waterData[x]*0.5 + waterData[x+2]*0.7;
 		waterData[x + 7] = waterData[x+1]*0.5 + waterData[x+2]*0.7;
@@ -338,40 +340,40 @@ void rotateShip(int size, float xcen, float ycen, float zcen, float rotAngle, fl
 		xp = modelData[x];
 		yp = modelData[x+1];
 		zp = modelData[x+2];
-		
+
 		xnp = modelData[x] + modelData[x+3];
 		ynp = modelData[x+1] + modelData[x+4];
 		znp = modelData[x+2] + modelData[x+5];
-		
+
 		//flat rotate
 		modelData[x] = xp * cos(rotAngle) - yp*sin(rotAngle);
 		modelData[x+1] = yp * cos(rotAngle) + xp*sin(rotAngle);
 		modelData[x+3] = (xnp * cos(rotAngle) - ynp*sin(rotAngle)) - modelData[x];
 		modelData[x+4] = (ynp * cos(rotAngle) + xnp*sin(rotAngle)) - modelData[x+1];
-		
+
 		/*
 		xp = modelData[x];
 		yp = modelData[x+1];
 		zp = modelData[x+2];
-		
+
 		xnp = modelData[x] + modelData[x+3];
 		ynp = modelData[x+1] + modelData[x+4];
 		znp = modelData[x+2] + modelData[x+5];
-		
+
 		//xz rotate
 		modelData[x] = xp * cos(xzrot) - zp*sin(xzrot);
 		modelData[x+2] = zp * cos(xzrot) + xp*sin(xzrot);
 		modelData[x+3] = (xnp * cos(xzrot) - znp*sin(xzrot)) - modelData[x];
 		modelData[x+5] = (znp * cos(xzrot) + xnp*sin(xzrot)) - modelData[x+2];
-		
+
 		xp = modelData[x];
 		yp = modelData[x+1];
 		zp = modelData[x+2];
-		
+
 		xnp = modelData[x] + modelData[x+3];
 		ynp = modelData[x+1] + modelData[x+4];
 		znp = modelData[x+2] + modelData[x+5];
-		
+
 		//yz rotate
 		modelData[x+1] = yp * cos(yzrot) - zp*sin(yzrot);
 		modelData[x+2] = zp * cos(yzrot) + yp*sin(yzrot);
@@ -738,6 +740,48 @@ void attachTexture(unsigned char* img,int a, int b) {
  	glGenerateMipmap(GL_TEXTURE_2D);
 }
 
+float* drawObelisk(float xLoc, float yLoc, GLuint shaderP, GLuint vao, GLuint vbo[]) {
+  float leftX = xLoc - 2.5;
+  float rightX = xLoc + 2.5;
+  float forwardY = yLoc + 2.5;
+  float backwardY = yLoc - 2.5;
+  float upZ = 20;
+  float curZ = -1;
+  float Obelisk[] = {
+   // X      Y     Z     R     G      B      U      V
+   xLoc, yLoc,      upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // forw background
+   leftX, forwardY, curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   rightX,forwardY, curZ, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   rightX,backwardY,curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   leftX, backwardY,curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   xLoc,yLoc,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+
+   xLoc, yLoc,       upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // forw background
+   leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   leftX, backwardY, curZ, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   rightX,backwardY, curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   rightX, forwardY, curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   xLoc,yLoc,  upZ,  0.0f, -1.0f, 0.0f, 0.0f, 1.0f
+ };
+ drawObject(Obelisk,shaderP, vao, vbo,96,96);
+}
+
+void drawObelisks(GLuint shaderP, GLuint vao, GLuint vbo[]) {
+  if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 40) {
+    Obelisks[0] = shipPos.x + (shipDir.x*20);
+    Obelisks[1] = shipPos.y + (shipDir.y*20);
+    cout<<" Obelisk boy the tormenter "<<Obelisks[0]<<", "<<Obelisks[1]<<endl;
+  } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 40) {
+    Obelisks[2] = shipPos.x + (shipDir.x*20);
+    Obelisks[3] = shipPos.y + (shipDir.y*20);
+  }
+  drawObelisk(Obelisks[0],Obelisks[1],shaderP,vao,vbo);
+  drawObelisk(Obelisks[2],Obelisks[3],shaderP,vao,vbo);
+  // shipPos.x shipPos.y shipPos.z
+
+}
+
+
 void drawBackground(GLuint shaderP, GLuint vao, GLuint vbo[]) {
   float distance_away = 28.2;
   float curX = shipPos.x;
@@ -935,6 +979,11 @@ int main(int argc, char *argv[]) {
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* imgData = loadImage("ship.ppm",wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
+  int obe1, obe2;
+    //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+  unsigned char* obeImg = loadImage("banana.ppm",obe1,obe2);
+
+
 	int v1, v2;
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
@@ -1064,7 +1113,7 @@ int main(int argc, char *argv[]) {
 
 				camPos += camLeft * float(windowEvent.motion.xrel)*xsens;
 			}
-			
+
 		}
 		distToShip = (camPos.x - shipPos.x)*(camPos.x - shipPos.x) + (camPos.y - shipPos.y) * (camPos.y - shipPos.y);
 		glm::vec3 toShip= shipPos - camPos;
@@ -1087,7 +1136,7 @@ int main(int argc, char *argv[]) {
 			camPos -= toShip * 0.001f;
 		}
 		*/
-		
+
 		translateShip(4475*8*2,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		translateWater(sizeOfWater,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
@@ -1122,6 +1171,8 @@ int main(int argc, char *argv[]) {
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
 		attachTexture(imgData,wi,hi);
 		drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
+    attachTexture(obeImg,obe1,obe2);
+    drawObelisks(shaderProgram, vao, &vbo);
 		attachTexture(watImg,watX,watY);
 		drawObject(waterData,shaderProgram, vao, &vbo,sizeOfWater, sizeOfWater);
 		attachTexture(skyImg,v1,v2);
