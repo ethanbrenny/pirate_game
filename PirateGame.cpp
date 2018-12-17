@@ -7,7 +7,7 @@ using namespace std;
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-
+#include <cmath>
 #include <time.h>
 
 #define GLM_FORCE_RADIANS //ensure we are using radians
@@ -69,7 +69,7 @@ glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 float timer1;
 clock_t startTime;
 
-int sizeOfWater =0; 
+int sizeOfWater =0;
 
 void makeWater(){
 
@@ -77,7 +77,7 @@ void makeWater(){
 	float ystart = -3.75;
 	int indexofwater =0;
 	int squareIndex = 0;
-	
+
 	//first layer
 	for (int i = 0; i < 16; i++){
 		for (int j = 0; j < 16; j ++){
@@ -88,61 +88,61 @@ void makeWater(){
 				for (int k =0; k < 6; k++){
 					waterData[indexofwater++] = waterSquare[squareIndex++];
 				}
-				sizeOfWater += 8; 
+				sizeOfWater += 8;
 			}
 		}
 	}
-	
-	//second layer around the center double the size of triangles. 
+
+	//second layer around the center double the size of triangles.
 	for (int h =0; h < 9; h++){
 		if(h != 4){
 			xstart = -11.5 + 8 * (h%3);
 			ystart = -11.5 + 8 * (h/3);
 			for(int i =0; i < 8; i++){
 				for (int j =0; j < 8; j++){
-					squareIndex = 0; 
+					squareIndex = 0;
 					for (int l =0; l< 12; l ++){
 						waterData[indexofwater++] = waterSquare[squareIndex++]*2.01 + xstart + i;
 						waterData[indexofwater++] = waterSquare[squareIndex++]*2.01 + ystart + j;
 						for (int k =0; k < 6; k++){
 							waterData[indexofwater++] = waterSquare[squareIndex++];
 						}
-						sizeOfWater += 8; 
+						sizeOfWater += 8;
 					}
 				}
 			}
 		}
 	}
-	
+
 	//outer circle
 	float outerPos[60*4];
 	float innerPos[60*4];
 	float dx, dy, xs, ys, distFromCent;
-	int inde = 0; 
+	int inde = 0;
 	for (int side =0; side < 4; side++){
 		if (side == 0){
-			dy = 0; 
+			dy = 0;
 			dx = 23.226/30;
 			xs = -12.0;
-			ys = -12.0; 
+			ys = -12.0;
 		}
 		else if (side == 1){
-			dy = 23.226/30; 
+			dy = 23.226/30;
 			dx = 0;
 			xs = 12.0;
-			ys = -12.0; 
+			ys = -12.0;
 		}
 		else if (side == 2){
-			dy = 0; 
+			dy = 0;
 			dx = -23.226/30;
 			xs = 12.0;
-			ys = 12.0; 
+			ys = 12.0;
 		}
 		else if (side == 3){
-			dy = -23.226/30; 
+			dy = -23.226/30;
 			dx = 0;
 			xs = -12.0;
-			ys = 12.0; 
+			ys = 12.0;
 		}
 		for (int point =0; point < 30; point++){
 			innerPos[inde] = xs+dx*point;
@@ -153,43 +153,73 @@ void makeWater(){
 			inde+=2;
 		}
 	}
-	
+
 	for (int i =0; i < 120; i++){
 		waterData[indexofwater++] = innerPos[i*2];
 		waterData[indexofwater++] = innerPos[i*2 +1];
 		for (int k =0; k < 6; k++){
-			waterData[indexofwater++] = 0.0;
+      if (k == 3) {
+        waterData[indexofwater++] = 1.0;
+      }
+      else{
+        waterData[indexofwater++] = 0.0;
+      }
 		}
 		waterData[indexofwater++] = outerPos[i*2];
 		waterData[indexofwater++] = outerPos[i*2 +1];
 		for (int k =0; k < 6; k++){
-			waterData[indexofwater++] = 0.0;
+      if (k == 3) {
+        waterData[indexofwater++] = 1.0;
+      }
+      else{
+        waterData[indexofwater++] = 0.0;
+      }
 		}
 		waterData[indexofwater++] = innerPos[(i*2+2)%240];
 		waterData[indexofwater++] = innerPos[(i*2+3)%240];
 		for (int k =0; k < 6; k++){
-			waterData[indexofwater++] = 0.0;
+      if (k == 3) {
+        waterData[indexofwater++] = 1.0;
+      }
+      else{
+        waterData[indexofwater++] = 0.0;
+      }
 		}
-		
+
 		waterData[indexofwater++] = outerPos[i*2];
 		waterData[indexofwater++] = outerPos[i*2 +1];
 		for (int k =0; k < 6; k++){
-			waterData[indexofwater++] = 0.0;
+      if (k == 3) {
+        waterData[indexofwater++] = 1.0;
+      }
+      else{
+        waterData[indexofwater++] = 0.0;
+      }
 		}
 		waterData[indexofwater++] = outerPos[(i*2+2)%240];
 		waterData[indexofwater++] = outerPos[(i*2+3)%240];
 		for (int k =0; k < 6; k++){
-			waterData[indexofwater++] = 0.0;
+      if (k == 3) {
+        waterData[indexofwater++] = 1.0;
+      }
+      else{
+        waterData[indexofwater++] = 0.0;
+      }
 		}
 		waterData[indexofwater++] = innerPos[(i*2+2)%240];
 		waterData[indexofwater++] = innerPos[(i*2+3)%240];
 		for (int k =0; k < 6; k++){
-			waterData[indexofwater++] = 0.0;
+      if (k == 3) {
+        waterData[indexofwater++] = 1.0;
+      }
+      else{
+        waterData[indexofwater++] = 0.0;
+      }
 		}
-		sizeOfWater += 8*6; 
+		sizeOfWater += 8*6;
 	}
-		
-	return; 
+
+	return;
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
@@ -212,19 +242,19 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 //changed
 void makeWave(float xpos, float ypos, int index){
 	float zpos =0;
-
+  float tot = 0;
 	float waveHeight = 0.1;
 	float waterHeight = 0.1;
 	float waveSpeed = 2.1;
-	
+
 	float xdist = xpos - shipPos.x;
 	float ydist = ypos - shipPos.y;
-	float distance = (xdist * xdist + ydist * ydist); 
-	
+	float distance = (xdist * xdist + ydist * ydist);
+
 	if(distance > 0){
 		waveHeight = 0.1*(0.5*cos(3.1415*distance/900) + 0.5);
 	}
-	
+
 	zpos = sin(xpos + ypos + timer1*waveSpeed) * waveHeight + waterHeight;
 	//zpos += sin((xpos - ypos + timer1)*5) * 0.02;
 	//z pos
@@ -240,12 +270,14 @@ void makeWave(float xpos, float ypos, int index){
 	}
 
 	tangent = 1/tangent;
-
+  //waterData[5] = 1;
+  //tot = sqrt((tangent*tangent *2) + waterData[5]);
 	//x normal
-	waterData[index+3] = tangent;
+	//waterData[index+3] = tangent/tot;
 
 	//y normal
-	waterData[index+4] = tangent;
+	//waterData[index+4] = tangent/tot;
+  //waterData[index+5] = 1/tot;
 }
 
 void translateWater(int size, float xtrans, float ytrans, float ztrans){
@@ -253,6 +285,8 @@ void translateWater(int size, float xtrans, float ytrans, float ztrans){
 	for(int x =0; x < size; x += 8){
 		waterData[x] += xtrans;
 		waterData[x+1] += ytrans;
+    waterData[x + 6] = waterData[x];
+    waterData[x + 7] = waterData[x+1];
 		makeWave(waterData[x], waterData[x+1], x);
 	}
 }
@@ -641,35 +675,36 @@ void drawBackground(GLuint shaderP, GLuint vao, GLuint vbo[]) {
   float backwardY = curY - distance_away;
   float upZ = curZ + 40;
   float midZ = curZ + 20;
+  curZ -= 15;
   float background[] = {
    // X      Y     Z     R     G      B      U      V
-     leftX, forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // forw background
-     leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-     rightX,forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-     leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+   leftX, forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.25f, 1.0f, // forw background
+   leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.25f, 0.0f,
+   rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+   rightX,forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   leftX, forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.25f, 0.0f,
+   rightX,forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
 
-     leftX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, //  back background
-     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     rightX,backwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-     rightX,backwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     rightX,backwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+   leftX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.5f, 1.0f, //  left background
+   leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.5f, 0.0f,
+   leftX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.25f, 1.0f,
+   leftX,  forwardY,  curZ,0.0f, -1.0f, 0.0f, 0.25f, 0.0f,
+   leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.5f, 0.0f,
+   leftX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.25f, 1.0f,
 
-     leftX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, //  left background
-     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     leftX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-     leftX,  forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-     leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     leftX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+   leftX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.5f, 1.0f, //  back background
+   leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.5f, 0.0f,
+   rightX,backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.75f, 1.0f,
+   rightX,backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.75f, 0.0f,
+   leftX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.5f, 0.0f,
+   rightX,backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.75f, 1.0f,
 
-     rightX,  forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-     rightX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     rightX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-     rightX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, //  right background
-     rightX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-     rightX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
+   rightX,  forwardY,  curZ,0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   rightX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.75f, 0.0f,
+   rightX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+   rightX, backwardY,  upZ, 0.0f, -1.0f, 0.0f, 0.75f, 1.0f, //  right background
+   rightX, backwardY,  curZ,0.0f, -1.0f, 0.0f, 0.75f, 0.0f,
+   rightX,  forwardY,  upZ, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
    };
   drawObject(background,shaderP, vao, vbo,192,192);
 }
@@ -727,7 +762,7 @@ const GLchar* vertexSource =
 "in vec3 inNormal;"
 "in vec3 inColor;"
 "in vec2 inTexcoord;"
-"const vec3 inlightDir = normalize(vec3(0,0,-1));"
+"const vec3 inlightDir = normalize(vec3(0,0,1));"
 "uniform mat4 model;"
 "uniform mat4 view;"
 "uniform mat4 proj;"
@@ -764,7 +799,7 @@ const GLchar* fragmentSource =
   "void main() {"
   "   vec3 Color = vec3(1,1,1);"
   "   vec3 N = normalize(normal);" //Re-normalized the interpolated normals
-  "   vec3 diffuseC = Color*max(dot(lightDir,N),0.0);"
+  "   vec3 diffuseC = .5*Color*max(dot(lightDir,N),0.0);"
   "   vec3 ambC = Color*ambient;"
   "   vec3 reflectDir = reflect(-lightDir,N);"
   "   vec3 viewDir = normalize(eyePos-pos);"  //We know the eye is at 0,0
@@ -826,9 +861,13 @@ int main(int argc, char *argv[]) {
 	//unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
 	unsigned char* imgData = loadImage("ship.ppm",wi,hi);
 	printf("Loaded Image of size (%d,%d)\n",wi,hi);
-    int v1, v2, nChan;
-   //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-    unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
+  int v1, v2;
+  //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+  unsigned char* skyImg = loadImage("sky2.ppm",v1,v2);
+
+  int watX,watY;
+  //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
+  unsigned char* watImg = loadImage("SeaTile.ppm",watX,watY);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -899,7 +938,7 @@ int main(int argc, char *argv[]) {
     float shipSpeed = 0.01;
     makeWater();
     cout << sizeOfWater << endl;
-    
+
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
@@ -997,6 +1036,7 @@ int main(int argc, char *argv[]) {
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
 		attachTexture(imgData,wi,hi);
 		drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
+    attachTexture(watImg,watX,watY);
 		drawObject(waterData,shaderProgram, vao, &vbo,sizeOfWater, sizeOfWater);
 		attachTexture(skyImg,v1,v2);
 		drawBackground(shaderProgram,vao,&vbo);
@@ -1005,9 +1045,9 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_SwapWindow(window); //Double buffering
 	}
-
+  delete [] watImg;
 	delete [] imgData;
-    delete [] skyImg;
+  delete [] skyImg;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
