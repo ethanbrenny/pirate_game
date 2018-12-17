@@ -228,12 +228,13 @@ void makeWater(){
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
-	
-	now[0] = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * 0.05;
-	now[1] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * 0.01;
-	now[2] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * 0.01;
-	now[3] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * 0.01;
-	now[4] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * 0.01;
+	float bob = 0.06;
+	float goof = 0.01;
+	now[0] = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * bob;
+	now[1] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * goof;
+	now[2] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * goof;
+	now[3] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * goof;
+	now[4] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * goof;
 	
 	float frontSlope = now[1] - now[2];
 	float sideSlope = now[3] - now[4];
