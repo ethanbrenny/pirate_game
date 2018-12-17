@@ -233,8 +233,8 @@ void makeWater(){
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
-	float bob = 0.06;
-	float goof = 0.01;
+	float bob = 0.09;
+	float goof = 0.02;
 	now[0] = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * bob;
 	now[1] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * goof;
 	now[2] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * goof;
@@ -778,19 +778,19 @@ void drawObelisks(GLuint shaderP, GLuint vao, GLuint vbo[]) {
     Obelisks[2] += obeDir.x;
     Obelisks[3] += obeDir.y;
   }
-  if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 40) {
+  if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 60) {
     hitObelisk[0] = false;
     obeDir.x = 0;
     obeDir.y = 0;
-    Obelisks[0] = shipPos.x + (shipDir.x*20);
-    Obelisks[1] = shipPos.y + (shipDir.y*20);
+    Obelisks[0] = shipPos.x + (shipDir.x*25) + (rand() % 10);
+    Obelisks[1] = shipPos.y + (shipDir.y*25) + (rand() % 10);
     cout<<" Obelisk boy the tormenter "<<Obelisks[0]<<", "<<Obelisks[1]<<endl;
-  } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 40) {
+  } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 60) {
     hitObelisk[1] = false;
     obeDir.x = 0;
     obeDir.y = 0;
-    Obelisks[2] = shipPos.x + (shipDir.x*20);
-    Obelisks[3] = shipPos.y + (shipDir.y*20);
+    Obelisks[2] = shipPos.x + (shipDir.x*25) + (rand() % 10);
+    Obelisks[3] = shipPos.y + (shipDir.y*25) + (rand() % 10);
   }
 
   drawObelisk(Obelisks[0],Obelisks[1],shaderP,vao,vbo);
@@ -1071,7 +1071,7 @@ int main(int argc, char *argv[]) {
 	float ysens = -0.002;
 	float distToShip = 6.0;
 	float needToMove = 0.0;
-    float shipSpeed = 0.01;
+    float shipSpeed = 0.03;
     makeWater();
     cout << sizeOfWater << endl;
 	while (!quit){
