@@ -778,19 +778,19 @@ void drawObelisks(GLuint shaderP, GLuint vao, GLuint vbo[]) {
     Obelisks[2] += obeDir.x;
     Obelisks[3] += obeDir.y;
   }
-  if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 60) {
+  if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 70) {
     hitObelisk[0] = false;
     obeDir.x = 0;
     obeDir.y = 0;
-    Obelisks[0] = shipPos.x + (shipDir.x*25) + (rand() % 10);
-    Obelisks[1] = shipPos.y + (shipDir.y*25) + (rand() % 10);
+    Obelisks[0] = shipPos.x + (shipDir.x*25) + (shipDir.x* (rand() % 15));
+    Obelisks[1] = shipPos.y + (shipDir.y*25) + (shipDir.y* (rand() % 15));
     cout<<" Obelisk boy the tormenter "<<Obelisks[0]<<", "<<Obelisks[1]<<endl;
-  } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 60) {
+  } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 70) {
     hitObelisk[1] = false;
     obeDir.x = 0;
     obeDir.y = 0;
-    Obelisks[2] = shipPos.x + (shipDir.x*25) + (rand() % 10);
-    Obelisks[3] = shipPos.y + (shipDir.y*25) + (rand() % 10);
+    Obelisks[2] = shipPos.x + (shipDir.x*25) + (shipDir.x* (rand() % 15));
+    Obelisks[3] = shipPos.y + (shipDir.y*25) + (shipDir.y* (rand() % 15));
   }
 
   drawObelisk(Obelisks[0],Obelisks[1],shaderP,vao,vbo);
@@ -1071,9 +1071,9 @@ int main(int argc, char *argv[]) {
 	float ysens = -0.002;
 	float distToShip = 6.0;
 	float needToMove = 0.0;
-    float shipSpeed = 0.03;
-    makeWater();
-    cout << sizeOfWater << endl;
+  float shipSpeed = 0.03;
+  makeWater();
+  cout << sizeOfWater << endl;
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
