@@ -316,11 +316,16 @@ void makeWave(float xpos, float ypos, int index){
 void translateWater(int size, float xtrans, float ytrans, float ztrans){
 	timer1 = (clock() - startTime) / float(CLOCKS_PER_SEC);
 	for(int x =0; x < size; x += 8){
+		//positions
 		waterData[x] += xtrans;
 		waterData[x+1] += ytrans;
-    waterData[x + 6] = waterData[x];
-    waterData[x + 7] = waterData[x+1];
+		
+		//hiehgt
 		makeWave(waterData[x], waterData[x+1], x);
+		
+		//uv
+		waterData[x + 6] = waterData[x]*0.5 + waterData[x+2]*0.7;
+		waterData[x + 7] = waterData[x+1]*0.5 + waterData[x+2]*0.7;
 	}
 }
 
@@ -935,7 +940,7 @@ int main(int argc, char *argv[]) {
 
     int watX,watY;
     //unsigned char* imgData = stbi_load("./models/low_poly_ship/123.png", &wi, &hi, &nrChannels, 0);
-    unsigned char* watImg = loadImage("SeaTile.ppm",watX,watY);
+    unsigned char* watImg = loadImage("glass.ppm",watX,watY);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, hi, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);
