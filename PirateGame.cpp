@@ -113,6 +113,82 @@ void makeWater(){
 			}
 		}
 	}
+	
+	//outer circle
+	float outerPos[60*4];
+	float innerPos[60*4];
+	float dx, dy, xs, ys, distFromCent;
+	int inde = 0; 
+	for (int side =0; side < 4; side++){
+		if (side == 0){
+			dy = 0; 
+			dx = 23.226/30;
+			xs = -12.0;
+			ys = -12.0; 
+		}
+		else if (side == 1){
+			dy = 23.226/30; 
+			dx = 0;
+			xs = 12.0;
+			ys = -12.0; 
+		}
+		else if (side == 2){
+			dy = 0; 
+			dx = -23.226/30;
+			xs = 12.0;
+			ys = 12.0; 
+		}
+		else if (side == 3){
+			dy = -23.226/30; 
+			dx = 0;
+			xs = -12.0;
+			ys = 12.0; 
+		}
+		for (int point =0; point < 30; point++){
+			innerPos[inde] = xs+dx*point;
+			innerPos[inde+1] = ys+dy*point;
+			distFromCent = sqrt(innerPos[inde]*innerPos[inde] + innerPos[inde+1]*innerPos[inde+1]);
+			outerPos[inde] = innerPos[inde] * 30 / distFromCent;
+			outerPos[inde + 1] = innerPos[inde+1] * 30 / distFromCent;
+			inde+=2;
+		}
+	}
+	
+	for (int i =0; i < 120; i++){
+		waterData[indexofwater++] = innerPos[i*2];
+		waterData[indexofwater++] = innerPos[i*2 +1];
+		for (int k =0; k < 6; k++){
+			waterData[indexofwater++] = 0.0;
+		}
+		waterData[indexofwater++] = outerPos[i*2];
+		waterData[indexofwater++] = outerPos[i*2 +1];
+		for (int k =0; k < 6; k++){
+			waterData[indexofwater++] = 0.0;
+		}
+		waterData[indexofwater++] = innerPos[(i*2+2)%240];
+		waterData[indexofwater++] = innerPos[(i*2+3)%240];
+		for (int k =0; k < 6; k++){
+			waterData[indexofwater++] = 0.0;
+		}
+		
+		waterData[indexofwater++] = outerPos[i*2];
+		waterData[indexofwater++] = outerPos[i*2 +1];
+		for (int k =0; k < 6; k++){
+			waterData[indexofwater++] = 0.0;
+		}
+		waterData[indexofwater++] = outerPos[(i*2+2)%240];
+		waterData[indexofwater++] = outerPos[(i*2+3)%240];
+		for (int k =0; k < 6; k++){
+			waterData[indexofwater++] = 0.0;
+		}
+		waterData[indexofwater++] = innerPos[(i*2+2)%240];
+		waterData[indexofwater++] = innerPos[(i*2+3)%240];
+		for (int k =0; k < 6; k++){
+			waterData[indexofwater++] = 0.0;
+		}
+		sizeOfWater += 8*6; 
+	}
+		
 	return; 
 }
 
@@ -133,13 +209,22 @@ void translateShip(int size, float xtrans, float ytrans, float ztrans){
 
 }
 
+//changed
 void makeWave(float xpos, float ypos, int index){
 	float zpos =0;
 
 	float waveHeight = 0.1;
 	float waterHeight = 0.1;
 	float waveSpeed = 2.1;
-
+	
+	float xdist = xpos - shipPos.x;
+	float ydist = ypos - shipPos.y;
+	float distance = (xdist * xdist + ydist * ydist); 
+	
+	if(distance > 0){
+		waveHeight = 0.1*(0.5*cos(3.1415*distance/900) + 0.5);
+	}
+	
 	zpos = sin(xpos + ypos + timer1*waveSpeed) * waveHeight + waterHeight;
 	//zpos += sin((xpos - ypos + timer1)*5) * 0.02;
 	//z pos
