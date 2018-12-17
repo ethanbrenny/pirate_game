@@ -770,17 +770,25 @@ float* drawObelisk(float xLoc, float yLoc, GLuint shaderP, GLuint vao, GLuint vb
 }
 
 void drawObelisks(GLuint shaderP, GLuint vao, GLuint vbo[]) {
-  Obelisks[0] += obeDir.x;
-  Obelisks[1] += obeDir.y;
-  Obelisks[2] += obeDir.x;
-  Obelisks[3] += obeDir.y;
+  if (hitObelisk[0]) {
+    Obelisks[0] += obeDir.x;
+    Obelisks[1] += obeDir.y;
+  }
+  if (hitObelisk[1]) {
+    Obelisks[2] += obeDir.x;
+    Obelisks[3] += obeDir.y;
+  }
   if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 40) {
     hitObelisk[0] = false;
+    obeDir.x = 0;
+    obeDir.y = 0;
     Obelisks[0] = shipPos.x + (shipDir.x*20);
     Obelisks[1] = shipPos.y + (shipDir.y*20);
     cout<<" Obelisk boy the tormenter "<<Obelisks[0]<<", "<<Obelisks[1]<<endl;
   } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 40) {
     hitObelisk[1] = false;
+    obeDir.x = 0;
+    obeDir.y = 0;
     Obelisks[2] = shipPos.x + (shipDir.x*20);
     Obelisks[3] = shipPos.y + (shipDir.y*20);
   }
@@ -858,9 +866,17 @@ void loadShader(GLuint shaderID, const GLchar* shaderSource){
 
 bool collisionCheckObelisk() {
   if (abs(shipPos.x - Obelisks[0]) + abs(shipPos.y- Obelisks[1]) < 8) {
+    hitObelisk[0] = true;
+    obeDir.x = shipDir.x + 1;
+    obeDir.y = shipDir.y + (rand() % 50 /100);
+    obeDir.z = -.1;
     return true;
   }
   if (abs(shipPos.x - Obelisks[2]) + abs(shipPos.y- Obelisks[3]) < 8) {
+    hitObelisk[1] = true;
+    obeDir.x = shipDir.x + 1;
+    obeDir.y = shipDir.y + (rand() % 50 /100);
+    obeDir.z = -.1;
     return true;
   }
   return false;
@@ -1173,21 +1189,7 @@ int main(int argc, char *argv[]) {
 		drawObject(waterData,shaderProgram, vao, &vbo,sizeOfWater, sizeOfWater);
 		attachTexture(skyImg,v1,v2);
 		drawBackground(shaderProgram,vao,&vbo);
-    if (collisionCheckObelisk()) {
-      cout<<" We have hit banana"<<endl;
-      if (!hitObelisk[0]){
-        hitObelisk = true;
-        obeDir.x = shipDir.x + 1;
-        obeDir.y = shipDir.y + (rand() % 50 /100);
-        obeDir.z = -.1;
-      }
-      if (!hitObelisk[1]){
-        hitObelisk = true;
-        obeDir.x = shipDir.x + 1;
-        obeDir.y = shipDir.y + (rand() % 50 /100);
-        obeDir.z = -.1;
-      }
-    }
+    collisionCheckObelisk();
 		//glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
 		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
