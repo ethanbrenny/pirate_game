@@ -61,7 +61,7 @@ bool fullscreen = false;
 int screen_width = 800;
 int screen_height = 600;
 
-glm::vec3 camPos = glm::vec3(7.0f, 0.0f, 3.0f);  //Cam Position
+glm::vec3 camPos = glm::vec3(6.5f, 0.0f, 3.0f);  //Cam Position
 glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
 glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
@@ -806,7 +806,7 @@ const GLchar* fragmentSource =
   "   float spec = max(dot(reflectDir,viewDir),0.0);"
   "   if (dot(lightDir,N) <= 0.0) spec = 0;"
   "   vec3 specC = vec3(.8,.8,.8)*pow(spec,4);"
-  "   outColor = texture(tex0, texcoord).rgb * (ambC+diffuseC);"
+  "   outColor = texture(tex0, texcoord).rgb * (ambC+0.4*diffuseC);"
   "}";
 
 //"   outColor = vec4(ambC+diffuseC+specC, 1.0);"
@@ -990,18 +990,30 @@ int main(int argc, char *argv[]) {
 
 				camPos += camLeft * float(windowEvent.motion.xrel)*xsens;
 			}
-			distToShip = (camPos.x - shipPos.x)*(camPos.x - shipPos.x) + (camPos.y - shipPos.y) * (camPos.y - shipPos.y);
-			glm::vec3 toShip= shipPos - camPos;
-			toShip.z = 0;
-			glm::normalize(toShip);
-			if (distToShip > 36.001){
-				camPos += toShip * 0.001f;
-				//cout << distToShip <<endl;
-			}
-			else if (distToShip < 35.999){
-				camPos -= toShip * 0.001f;
-			}
+			
 		}
+		distToShip = (camPos.x - shipPos.x)*(camPos.x - shipPos.x) + (camPos.y - shipPos.y) * (camPos.y - shipPos.y);
+		glm::vec3 toShip= shipPos - camPos;
+		toShip.z = 0;
+		glm::normalize(toShip);
+		//fix camera
+		if (distToShip > 42.4){
+			camPos += toShip * 0.006f;
+			//cout << distToShip <<endl;
+		}
+		else if (distToShip > 42.28){
+			camPos += toShip * 0.001f;
+			//cout << distToShip <<endl;
+		}
+		/*
+		else if (distToShip < 42.1){
+			camPos -= toShip * 0.01f;
+		}
+		else if (distToShip < 42.22){
+			camPos -= toShip * 0.001f;
+		}
+		*/
+		
 		translateShip(4475*8*2,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		translateWater(sizeOfWater,shipDir.x*shipSpeed,shipDir.y*shipSpeed, shipDir.z*shipSpeed);
 		//rotateShip(4475*8*2, 0, 0, 0, 0.02);
@@ -1036,7 +1048,7 @@ int main(int argc, char *argv[]) {
 		glBindVertexArray(vao);  //Bind the VAO for the shaders we are using
 		attachTexture(imgData,wi,hi);
 		drawObject(modelData,shaderProgram, vao, &vbo,numVerts, numLines);
-    attachTexture(watImg,watX,watY);
+		attachTexture(watImg,watX,watY);
 		drawObject(waterData,shaderProgram, vao, &vbo,sizeOfWater, sizeOfWater);
 		attachTexture(skyImg,v1,v2);
 		drawBackground(shaderProgram,vao,&vbo);
@@ -1045,9 +1057,9 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_SwapWindow(window); //Double buffering
 	}
-  delete [] watImg;
+    delete [] watImg;
 	delete [] imgData;
-  delete [] skyImg;
+    delete [] skyImg;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
