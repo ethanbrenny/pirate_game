@@ -9,6 +9,7 @@ using namespace std;
 #include <stdarg.h>
 #include <cmath>
 #include <time.h>
+#include <cstdlib>
 
 #define GLM_FORCE_RADIANS //ensure we are using radians
 #include "glm/glm.hpp"
@@ -31,6 +32,7 @@ using std::ifstream;
 float shipRotation = 0;
 float* modelData = new float[4475*8];
 float* waterData = new float[100000]; // 11232 * 8 vertices
+bool hitObelisk[] = {false,false};
   GLfloat waterSquare[] = {
    // X      Y     Z     R     G      B      U      V
      -0.25f,  0.25f,  0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // first tri
@@ -66,6 +68,7 @@ int screen_height = 600;
 glm::vec3 camPos = glm::vec3(6.5f, 0.0f, 3.0f);  //Cam Position
 glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
 glm::vec3 shipDir = glm::vec3(0.0f,1.0f,0.0f);
+glm::vec3 obeDir = glm::vec3(0.0f,0.0f,0.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f); //Up
 
 float timer1;
@@ -767,14 +770,21 @@ float* drawObelisk(float xLoc, float yLoc, GLuint shaderP, GLuint vao, GLuint vb
 }
 
 void drawObelisks(GLuint shaderP, GLuint vao, GLuint vbo[]) {
+  Obelisks[0] += obeDir.x;
+  Obelisks[1] += obeDir.y;
+  Obelisks[2] += obeDir.x;
+  Obelisks[3] += obeDir.y;
   if (abs(Obelisks[0] - shipPos.x) + abs(Obelisks[1] - shipPos.y) > 40) {
+    hitObelisk[0] = false;
     Obelisks[0] = shipPos.x + (shipDir.x*20);
     Obelisks[1] = shipPos.y + (shipDir.y*20);
     cout<<" Obelisk boy the tormenter "<<Obelisks[0]<<", "<<Obelisks[1]<<endl;
   } else if (abs(Obelisks[2] - shipPos.x) + abs(Obelisks[3] - shipPos.y) > 40) {
+    hitObelisk[1] = false;
     Obelisks[2] = shipPos.x + (shipDir.x*20);
     Obelisks[3] = shipPos.y + (shipDir.y*20);
   }
+
   drawObelisk(Obelisks[0],Obelisks[1],shaderP,vao,vbo);
   drawObelisk(Obelisks[2],Obelisks[3],shaderP,vao,vbo);
   // shipPos.x shipPos.y shipPos.z
@@ -846,28 +856,15 @@ void loadShader(GLuint shaderID, const GLchar* shaderSource){
   }
 }
 
-/*void rotateShipVertically(float amt) // amt + or - determines direction of shift
-{
-  shipRotation += amt;
-  //float vecX = 0;
-  //float vecY = 0;
-
-  glm::normalize(shipDir);
-  glm::vec3 vecToPoint = glm::vec3(0.0f,0.0f,0.0f);
-  float direct = 0.0;
-  for (int i = 0;i < 89856; i+=8) {
-    //shipRotation += changeIt;
-    vecToPoint.x = waterData[i] - shipPos.x;
-    vecToPoint.y = waterData[i+1] - shipPos.y;
-    glm::normalize(vecToPoint);
-    direct = glm::dot(vecToPoint,shipDir);
-    if (direct > 0) {
-      //waterData[i+2] += ;
-    } else {
-      //waterData[i+2] = 0;
-    }
+bool collisionCheckObelisk() {
+  if (abs(shipPos.x - Obelisks[0]) + abs(shipPos.y- Obelisks[1]) < 8) {
+    return true;
   }
-}*/
+  if (abs(shipPos.x - Obelisks[2]) + abs(shipPos.y- Obelisks[3]) < 8) {
+    return true;
+  }
+  return false;
+}
 
 #define GLM_FORCE_RADIANS //ensure we are using radians
 #include "glm/glm.hpp"
@@ -1061,7 +1058,6 @@ int main(int argc, char *argv[]) {
     float shipSpeed = 0.01;
     makeWater();
     cout << sizeOfWater << endl;
-
 	while (!quit){
 		while (SDL_PollEvent(&windowEvent)){
 			if (windowEvent.type == SDL_QUIT) quit = true; //Exit Game Loop
@@ -1177,6 +1173,21 @@ int main(int argc, char *argv[]) {
 		drawObject(waterData,shaderProgram, vao, &vbo,sizeOfWater, sizeOfWater);
 		attachTexture(skyImg,v1,v2);
 		drawBackground(shaderProgram,vao,&vbo);
+    if (collisionCheckObelisk()) {
+      cout<<" We have hit banana"<<endl;
+      if (!hitObelisk[0]){
+        hitObelisk = true;
+        obeDir.x = shipDir.x + 1;
+        obeDir.y = shipDir.y + (rand() % 50 /100);
+        obeDir.z = -.1;
+      }
+      if (!hitObelisk[1]){
+        hitObelisk = true;
+        obeDir.x = shipDir.x + 1;
+        obeDir.y = shipDir.y + (rand() % 50 /100);
+        obeDir.z = -.1;
+      }
+    }
 		//glDrawArrays(GL_TRIANGLES, 0, numVerts); //Number of vertices
 		//glDrawElements(GL_TRIANGLES, 0, numVerts/3, 0); //Number of vertices
 
@@ -1185,6 +1196,7 @@ int main(int argc, char *argv[]) {
     delete [] watImg;
 	delete [] imgData;
     delete [] skyImg;
+    delete [] obeImg;
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
