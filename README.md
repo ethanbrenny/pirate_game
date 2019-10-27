@@ -1,5 +1,5 @@
 # pirate game
-### Made in collabarotion with Luke Borton
+### Made in collabarotion with Luke Bortot
 
 **Summary**
 
