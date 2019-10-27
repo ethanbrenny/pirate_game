@@ -62,8 +62,8 @@ int height, width;
 string textureName = "ship.ppm";
 
 bool fullscreen = false;
-int screen_width = 800;
-int screen_height = 600;
+int screen_width = 1800;
+int screen_height = 1200;
 
 glm::vec3 camPos = glm::vec3(6.5f, 0.0f, 3.0f);  //Cam Position
 glm::vec3 shipPos = glm::vec3(0.0f, 0.0f, 1.0f);  //Look at point
@@ -233,8 +233,8 @@ void makeWater(){
 }
 
 void translateShip(int size, float xtrans, float ytrans, float ztrans){
-	float bob = 0.09;
-	float goof = 0.02;
+	float bob = 0.12;
+	float goof = 0.04;
 	now[0] = sin(shipPos.x + xtrans + shipPos.y + ytrans + timer1*2.1) * bob;
 	now[1] = sin(shipPos.x + xtrans + 0.5 + shipPos.y + ytrans + 0.5 + timer1*2.1) * goof;
 	now[2] = sin(shipPos.x + xtrans - 0.5 + shipPos.y + ytrans - 0.5 + timer1*2.1) * goof;
